@@ -1,0 +1,158 @@
+#include <iostream>
+using namespace std;
+
+class Node
+{
+protected:
+	int data; int height;
+	Node* right, *left;
+
+public:
+	Node() {data = 0, height = 1, right = left = nullptr;}
+	Node(int d) {data = d, height = 1, right = left = nullptr;}
+
+	virtual int getData() {return data;}
+	virtual int getHeight() {return height;}
+	virtual Node* getRight() {return right;}
+	virtual Node* getLeft() {return left;}
+	virtual void setData(int d) {data = d;}
+	virtual void setHeight(int h) {height = h;}
+	virtual void setRight(Node* r) {right = r;}
+	virtual void setLeft(Node* l) {left = l;}
+
+	friend ostream &operator<<(ostream &output, Node *a)
+	{
+		if(!a) return output;
+		else return output << a->getLeft() << a->getData() << " " << a->getRight();
+	}
+};
+
+class Tree : public Node
+{
+protected:
+	int size;
+
+public:
+	Tree() : Node() {size = 0;}
+
+	virtual void setSize(int sz) {size = sz;}
+	virtual int getSize() {return size;}
+
+	virtual Node* insert(Node* p, int data)
+	{
+		if(!p) return new Node(data);
+		if(data < p->getData()) p->setLeft(insert(p->getLeft(), data));
+		else p->setRight(insert(p->getRight(), data));
+		setSize(getSize() + 1);
+		return p;
+	}
+
+	virtual Node* findMin(Node* p)
+	{
+		if(p->getLeft()) return findMin(p->getLeft());
+		else return p;
+	}
+
+	virtual Node* deleteMin(Node* p)
+	{
+		if(!p->getLeft()) return p->getRight();
+		p->setLeft(deleteMin(p->getLeft()));
+		return p;
+	}
+
+	virtual Node* remove(Node *p, int data)
+	{
+		if(!p) return nullptr;
+		if(data < p->getData()) p->setLeft(remove(p->getLeft(), data));
+		else if(data > p->getData()) p->setRight(remove(p->getRight(), data));
+		else
+		{
+			Node* left = p->getLeft(); Node* right = p->getRight();
+			if(!right) return left;
+			Node* m = findMin(right);
+			m->setRight(deleteMin(m));
+			m->setLeft(left);
+			return m;
+		}
+		setSize(getSize() - 1);
+		return p;
+	}
+};
+
+class Avltree : public Tree
+{
+protected:
+	Node* root;
+
+	void fix(Node* p)
+	{
+		int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
+		p->setHeight((h1 > h2 ? h1 : h2) ++); 
+	}
+
+	int balanceFactor(Node* a)
+	{
+		if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
+		else if(a->getRight()) return a->getRight()->getHeight();
+		else if(a->getLeft()) return a->getLeft()->getHeight();
+		else return 0; 
+	}
+
+	Node* rightRotate(Node *p)
+	{
+		Node* q = p->getLeft();
+		p->setLeft(q->getRight());
+		q->setRight(p);
+		fix(p); fix(q);
+		return q;
+	}
+
+	Node* leftRotate(Node *p)
+	{
+		Node* q = p->getRight();
+		p->setRight(q->getLeft());
+		q->setLeft(p);
+		fix(p); fix(q);
+		return q;
+	}
+
+	Node* balance(Node *p)
+	{
+		fix(p);
+		if(balanceFactor(p) == 2)
+		{
+			if(balanceFactor(p->getRight()) < 0) p->setRight(rightRotate(p->getRight()));
+			return leftRotate(p);
+		}
+
+		if(balanceFactor(p) == -2)
+		{
+			if(balanceFactor(p->getLeft()) > 0) p->setLeft(leftRotate(p->getLeft()));
+			return rightRotate(p);
+		}
+		return p;
+	}
+
+
+public:
+	Avltree() {root = nullptr;}
+
+	virtual Node* getRoot() {return root;}
+
+	void insert(int data)
+	{
+		root = Tree::insert(root, data);
+		balance(root);
+	}
+
+	void remove(int data)
+	{
+		root = Tree::remove(root, data);
+		balance(root);
+	}
+
+	friend ostream &operator<<(ostream & output, Avltree a)
+	{
+		return output << a.getRoot();
+	}
+};
