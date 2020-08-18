@@ -1,0 +1,174 @@
+#include <iostream>
+using namespace std;
+
+template<class type>
+class Node
+{
+protected:
+	type data;
+	Node<type> *next;
+	Node<type> *previous;
+public:
+	Node() {data = type(0); next = previous = nullptr;}
+	Node(type d) {data = d; next = previous = nullptr;}
+
+	virtual type getData() {return data;}
+	virtual Node<type> *getNext() {return next;}
+	virtual Node<type> *getPrevious() {return previous;}
+	virtual void setData(type d) {data = d;}
+	virtual void setNext(Node<type> *n) {next = n;}
+	virtual void setPrevious(Node<type> *p) {previous = p;}
+};
+
+template<class type>
+class deque : public Node<type>
+{
+protected:
+	Node<type> *begin = nullptr;
+	Node<type> *end = nullptr;
+	int sz = 0;
+public:
+	deque() : Node<type>() {}
+	deque(int size) 
+	{
+		sz = size;
+		begin = new Node<type>(type(0));
+		Node<type> *curr = begin;
+		while(--size)
+		{
+			curr->setNext(new Node<type>(type(0)));
+			curr = curr->getNext();
+		}
+		end = curr;
+	}
+
+	virtual void push_back(type data)
+	{
+		if(begin)
+		{
+			Node<type> *new_elem = end;
+			new_elem->setNext(new Node<type>(data));
+			end = new_elem->getNext();
+			end->setPrevious(new_elem);
+		}
+		else
+		{
+			begin = end = new Node<type>(data);
+		}
+		sz++;
+	}
+
+	virtual void push_front(type data)
+	{
+		if(begin)
+		{
+			Node<type> *new_elem = begin;
+			new_elem->setPrevious(new Node<type>(data));
+			begin = new_elem->getPrevious();
+			begin->setNext(new_elem);
+			sz++;
+		}
+		else
+		{
+			begin = end = new Node<type>(data);
+		}
+	}
+
+	virtual void pop_back()
+	{
+		if(begin)
+		{
+			end = end->getPrevious();
+			sz--;
+		}
+	}
+
+	virtual void pop_front()
+	{
+		if(begin)
+		{
+			begin = begin->getNext();
+			sz--;
+		}
+	}
+
+	virtual type front() 
+
+	{
+		if(begin) return begin->getData();
+		return type(0);
+	}
+
+	virtual type back() 
+	{
+		if(begin) return end->getData();
+		return type(0);
+	}
+
+	virtual void insert(int pos, type data)
+	{
+		if(pos > 0 && pos < size())
+		{
+			Node<type>* curr = begin;
+			while(pos--) curr = curr->getNext();
+			Node<type>* new_elem = new Node<type>(data);
+			new_elem->setNext(curr);
+			new_elem->setPrevious(curr->getPrevious());
+			new_elem->getPrevious()->setNext(new_elem);
+			curr->setPrevious(new_elem);
+			sz++;
+		}
+		else if(pos == 0) push_front(data);
+		else if(pos == size()) push_back(data);
+		else return;
+	}
+
+	virtual void erase(int pos)
+	{
+		if(pos > 0 && pos < size())
+		{
+			Node<type>* curr = begin;
+			while(pos--) {curr = curr->getNext();}
+			curr->getPrevious()->setNext(curr->getNext());
+			curr->getNext()->setPrevious(curr->getPrevious());
+			delete curr;
+			sz--;
+		}
+		else if(pos == 0) {pop_front();}
+		else if(pos == size()) {pop_back();}
+		else return;
+	}
+
+	virtual int size() {return sz;}
+
+	virtual bool empty() 
+	{
+		if(begin) return true;
+		else return false;
+	}
+
+	virtual void print()
+	{
+		if(begin)
+		{
+			Node<type> *curr = begin;
+			while(curr != end->getNext()) 
+			{
+				cout << curr->getData() << " ";
+				curr = curr->getNext();
+			}
+		}
+	}
+
+	type operator[](const int index)
+	{
+		if(begin && index >= 0 && index < sz)
+		{
+			int in = index;
+			Node<type> *curr = begin;
+			while(in) {curr = curr->getNext(); in --;}
+			return curr->getData();
+		}
+		return type(0);
+	}
+};
