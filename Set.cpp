@@ -35,20 +35,20 @@ protected:
     
 	void fix(Node<type>* p)
 	{
-        if(p)
-        {
-            int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
-            p->setHeight((h1 > h2 ? h1 : h2) + 1);        
-        }
+		if(p)
+		{
+		    int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
+		    p->setHeight((h1 > h2 ? h1 : h2) + 1);        
+		}
 	}
 
 	int balanceFactor(Node<type>* a)
 	{
-    	if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
-        else if(a->getRight()) return a->getRight()->getHeight();
-        else if(a->getLeft()) return -(a->getLeft()->getHeight());
-        else return 0; 
-    }
+		if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
+		else if(a->getRight()) return a->getRight()->getHeight();
+		else if(a->getLeft()) return -(a->getLeft()->getHeight());
+		else return 0; 
+	}
 
 	Node<type>* rightRotate(Node<type> *p)
 	{
@@ -63,11 +63,11 @@ protected:
 	Node<type>* leftRotate(Node<type> *q)
 	{
 		Node<type>* p = q->getRight();
-        q->setRight(p->getLeft());
-        p->setLeft(q);
-        fix(p); 
-        fix(q);
-        return p;
+		q->setRight(p->getLeft());
+		p->setLeft(q);
+		fix(p); 
+		fix(q);
+		return p;
 	}
 
 	Node<type>* balance(Node<type>* p)
@@ -76,18 +76,18 @@ protected:
 		if(balanceFactor(p) == 2)
 		{
 			if(balanceFactor(p->getRight()) < 0) 
-            {
-                p->setRight(rightRotate(p->getRight()));
-            }
+			{
+				p->setRight(rightRotate(p->getRight()));
+			}
 			return leftRotate(p);
 		}
 
 		if(balanceFactor(p) == -2)
 		{
 			if(p && p->getLeft() && balanceFactor(p->getLeft()) > 0)
-            {
-                p->setLeft(leftRotate(p->getLeft()));
-            }
+			{
+				p->setLeft(leftRotate(p->getLeft()));
+			}
 			return rightRotate(p);
 		}
 		return p;
@@ -144,57 +144,57 @@ protected:
     int size;
     
 public:
-	Tree<type>() {root = nullptr;}
+    	Tree<type>() {root = nullptr;}
 	
 	virtual int Size() {return size;}
-    virtual Node<type>* getRoot() {return root;}
+	virtual Node<type>* getRoot() {return root;}
 	virtual void setSize(int sz) {size = sz;} 
-	
-	virtual void insert(type data)
-    {
-        root = Avltree<type>::insert(root, data);
-    }
-    
-    virtual void remove(type data)
-    {
-        root = Avltree<type>::remove(root, data);
-    }
-    
-    virtual void clear()
-    {
-        root = nullptr;
-    }
 
-	  friend ostream &operator<<(ostream & output, Tree<type> a)
-	  {
-		    return output << a.getRoot();
-	  }
+	virtual void insert(type data)
+	{
+		root = Avltree<type>::insert(root, data);
+	}
+
+	virtual void remove(type data)
+	{
+		root = Avltree<type>::remove(root, data);
+	}
+
+	virtual void clear()
+	{
+		root = nullptr;
+	}
+
+	friend ostream &operator<<(ostream & output, Tree<type> a)
+	{
+		return output << a.getRoot();
+	}
 };
 
 template<class type>
 class set : public Tree<type>
 {
 protected:
-    Tree<type> Set;
+	Tree<type> Set;
 
 public:
-    set(int s) { while(s--) {Set.insert(type());} }
-    set() {}
-    
-    virtual void insert(type data)
-    {
-        Set.insert(data);
-    }
-    
-    virtual void erase(type data)
-    {
-        Set.remove(data);
-    }
-    
-    virtual void clear()
-    {
-        Set.clear(); 
-    }
-    
-    friend ostream &operator<<(ostream &output, set p) {return output << p.Set;}
+	set(int s) { while(s--) {Set.insert(type());} }
+	set() {}
+
+	virtual void insert(type data)
+	{
+		Set.insert(data);
+	}
+
+	virtual void erase(type data)
+	{
+		Set.remove(data);
+	}
+
+	virtual void clear()
+	{
+		Set.clear(); 
+	}
+	
+	friend ostream &operator<<(ostream &output, set p) {return output << p.Set;}
 };
