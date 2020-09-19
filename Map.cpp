@@ -7,17 +7,17 @@ class Node
 {
 protected:
 	type_data data; int height;
-    type_index index;
+    	type_index index;
 	Node<type_index, type_data>* right, *left;
 
 public:
 	Node<type_index, type_data>() {data = type_data(), index = type_index(), height = 1, right = left = nullptr;}
-    Node<type_index, type_data>(type_index i, type_data d) {data = d, index = i, height = 1, right = left = nullptr;}
+    	Node<type_index, type_data>(type_index i, type_data d) {data = d, index = i, height = 1, right = left = nullptr;}
 	Node<type_index, type_data>(type_data d) {data = d, index = type_index(), height = 1, right = left = nullptr;}
 
     
 	virtual type_data getData() {return data;}
-    virtual type_index getIndex() {return index;}
+    	virtual type_index getIndex() {return index;}
 	virtual int getHeight() {return height;}
 	virtual Node<type_index, type_data>* getRight() {return right;}
 	virtual Node<type_index, type_data>* getLeft() {return left;} 
@@ -31,7 +31,7 @@ public:
 	{
 		if(!a) return output;
 		else return output << a->getLeft() << a->getData() << " " << a->getRight();
-    }
+    	}
 };
 
 template<class type_index, class type_data>
@@ -41,19 +41,19 @@ protected:
 	void fix(Node<type_index, type_data>* p)
 	{
         if(p)
-        {
-            int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
-            p->setHeight((h1 > h2 ? h1 : h2) + 1);        
-        }
+		{
+		    int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
+		    p->setHeight((h1 > h2 ? h1 : h2) + 1);        
+		}
 	}
 
 	int balanceFactor(Node<type_index, type_data>* a)
 	{
-    	if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
-        else if(a->getRight()) return a->getRight()->getHeight();
-        else if(a->getLeft()) return -(a->getLeft()->getHeight());
-        else return 0; 
-    }
+		if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
+		else if(a->getRight()) return a->getRight()->getHeight();
+		else if(a->getLeft()) return -(a->getLeft()->getHeight());
+		else return 0; 
+    	}
 
 	Node<type_index, type_data>* rightRotate(Node<type_index, type_data> *p)
 	{
@@ -68,11 +68,11 @@ protected:
 	Node<type_index, type_data>* leftRotate(Node<type_index, type_data> *q)
 	{
 		Node<type_index, type_data>* p = q->getRight();
-        q->setRight(p->getLeft());
-        p->setLeft(q);
-        fix(p); 
-        fix(q);
-        return p;
+		q->setRight(p->getLeft());
+		p->setLeft(q);
+		fix(p); 
+		fix(q);
+		return p;
 	}
 
 	Node<type_index, type_data>* balance(Node<type_index, type_data>* p)
@@ -81,18 +81,18 @@ protected:
 		if(balanceFactor(p) == 2)
 		{
 			if(balanceFactor(p->getRight()) < 0) 
-            {
-                p->setRight(rightRotate(p->getRight()));
-            }
+			{
+				p->setRight(rightRotate(p->getRight()));
+			}
 			return leftRotate(p);
 		}
 
 		if(balanceFactor(p) == -2)
 		{
 			if(balanceFactor(p->getLeft()) > 0)
-            {
-                p->setLeft(leftRotate(p->getLeft()));
-            }
+			{
+				p->setLeft(leftRotate(p->getLeft()));
+		    	}
 			return rightRotate(p);
 		}
 		return p;
@@ -159,46 +159,46 @@ protected:
 public:
 	Tree<type_index, type_data>() {root = nullptr; size = 0;}
 	
-    virtual Node<type_index, type_data>* getRoot() {return root;}
+    	virtual Node<type_index, type_data>* getRoot() {return root;}
 	virtual int Size() {return size;}
 	virtual void setSize(int sz) {size = sz;}
 	virtual void setRoot(Node<type_index, type_data>* r) {root = r;}
 	
 	virtual void insert(type_index index, type_data data)
-    {
-        root = Avltree<type_index, type_data>::insert(root, index, data);
-        setSize(Size() + 1);
-    }
+	{
+		root = Avltree<type_index, type_data>::insert(root, index, data);
+		setSize(Size() + 1);
+	}
     
-    virtual void remove(type_index index)
-    {
-        root = Avltree<type_index, type_data>::remove(root, index);
-        setSize(Size() - 1);
-    }
+	virtual void remove(type_index index)
+	{
+		root = Avltree<type_index, type_data>::remove(root, index);
+		setSize(Size() - 1);
+	}
     
 	type_data operator[](type_index index)
-    {
-        Node<type_index, type_data>*curr = getRoot();
-        while(curr->getIndex() < index && curr->getRight() || curr->getIndex() > index && curr->getLeft())
-        {
-            if(curr->getIndex() < index) curr = curr->getRight();
-            else curr = curr->getLeft();
-        }
-        if(curr->getIndex() == index) {return curr->getData();}
-        else if(curr->getRight() && curr->getRight()->getIndex() == index) {return curr->getRight()->getData();}
-        else if(curr->getLeft() && curr->getLeft()->getIndex() == index) {return curr->getLeft()->getData();}
-        else return type_data();
-    }
+	{
+		Node<type_index, type_data>*curr = getRoot();
+		while(curr->getIndex() < index && curr->getRight() || curr->getIndex() > index && curr->getLeft())
+		{
+		    if(curr->getIndex() < index) curr = curr->getRight();
+		    else curr = curr->getLeft();
+		}
+		if(curr->getIndex() == index) {return curr->getData();}
+		else if(curr->getRight() && curr->getRight()->getIndex() == index) {return curr->getRight()->getData();}
+		else if(curr->getLeft() && curr->getLeft()->getIndex() == index) {return curr->getLeft()->getData();}
+		else return type_data();
+	}
     
-    virtual void clear()
-    {
-        root = nullptr; 
-    }
+	virtual void clear()
+	{
+		root = nullptr; 
+	}
 
-    friend ostream &operator<<(ostream & output, Tree<type_index, type_data> a)
-    {
-      return output << a.getRoot();
-    }
+	friend ostream &operator<<(ostream & output, Tree<type_index, type_data> a)
+	{
+	      return output << a.getRoot();
+	}
 };
 
 template<class type_index, class type_data>
@@ -206,8 +206,6 @@ class map : Tree<type_index, type_data>
 {
 protected:
     Tree<type_index, type_data> Map;
-    
-    Node<type_index, type_data>* begin; Node<type_index, type_data>* end;
     
 public:
     map(int size) { while(size--) {Map.insert(type_index(size), type_data());} }
