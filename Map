@@ -40,7 +40,7 @@ class Avltree : public Node<type_index, type_data>
 protected:
 	void fix(Node<type_index, type_data>* p)
 	{
-        if(p)
+        	if(p)
 		{
 		    int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
 		    p->setHeight((h1 > h2 ? h1 : h2) + 1);        
