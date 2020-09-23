@@ -139,9 +139,9 @@ template<class type>
 class Tree : public Avltree<type>
 {
 protected:
-    Node<type>* root;
+	Node<type>* root;
     
-    int size;
+    	int size;
     
 public:
     	Tree<type>() {root = nullptr;}
