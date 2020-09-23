@@ -2,92 +2,104 @@
 using namespace std;
 
 template<class type>
-class Node
+class Element
 {
 protected:
 	type data;
-	Node<type> *next;
-	Node<type> *previous;
+	Element<type> *next;
+	Element<type> *previous;
 public:
-	Node() {data = type(0); next = previous = nullptr;}
-	Node(type d) {data = d; next = previous = nullptr;}
+	Element() {data = type(); next = previous = nullptr;}
+	Element(type d) {data = d; next = previous = nullptr;}
 
 	virtual type getData() {return data;}
-	virtual Node<type> *getNext() {return next;}
-	virtual Node<type> *getPrevious() {return previous;}
+	virtual Element<type> *getNext() {return next;}
+	virtual Element<type> *getPrevious() {return previous;}
 	virtual void setData(type d) {data = d;}
-	virtual void setNext(Node<type> *n) {next = n;}
-	virtual void setPrevious(Node<type> *p) {previous = p;}
+	virtual void setNext(Element<type> *n) {next = n;}
+	virtual void setPrevious(Element<type> *p) {previous = p;}
 };
 
 template<class type>
-class deque : public Node<type>
+class Deque : public Element<type>
 {
 protected:
-	Node<type> *begin = nullptr;
-	Node<type> *end = nullptr;
+	Element<type> *first;
+	Element<type> *last;
 	int sz = 0;
 public:
-	deque() : Node<type>() {}
-	deque(int size) 
+	Deque() : Element<type>() {first = last = nullptr;}
+	Deque(int size) 
 	{
 		sz = size;
-		begin = new Node<type>(type(0));
-		Node<type> *curr = begin;
+		first = new Element<type>(type());
+		Element<type> *curr = first;
 		while(--size)
 		{
-			curr->setNext(new Node<type>(type(0)));
+			curr->setNext(new Element<type>(type()));
 			curr = curr->getNext();
 		}
-		end = curr;
+		last = curr;
+	}
+	Deque(int size, type data) 
+	{
+		sz = size;
+		first = new Element<type>(data);
+		Element<type> *curr = first;
+		while(--size)
+		{
+			curr->setNext(new Element<type>(data));
+			curr = curr->getNext();
+		}
+		last = curr;
 	}
 
 	virtual void push_back(type data)
 	{
-		if(begin)
+		if(first)
 		{
-			Node<type> *new_elem = end;
-			new_elem->setNext(new Node<type>(data));
-			end = new_elem->getNext();
-			end->setPrevious(new_elem);
+			Element<type> *new_elem = last;
+			new_elem->setNext(new Element<type>(data));
+			last = new_elem->getNext();
+			last->setPrevious(new_elem);
 		}
 		else
 		{
-			begin = end = new Node<type>(data);
+			first = last = new Element<type>(data);
 		}
 		sz++;
 	}
 
 	virtual void push_front(type data)
 	{
-		if(begin)
+		if(first)
 		{
-			Node<type> *new_elem = begin;
-			new_elem->setPrevious(new Node<type>(data));
-			begin = new_elem->getPrevious();
-			begin->setNext(new_elem);
+			Element<type> *new_elem = first;
+			new_elem->setPrevious(new Element<type>(data));
+			first = new_elem->getPrevious();
+			first->setNext(new_elem);
 			sz++;
 		}
 		else
 		{
-			begin = end = new Node<type>(data);
+			first = last = new Element<type>(data);
 		}
 	}
 
 	virtual void pop_back()
 	{
-		if(begin)
+		if(first)
 		{
-			end = end->getPrevious();
+			last = last->getPrevious();
 			sz--;
 		}
 	}
 
 	virtual void pop_front()
 	{
-		if(begin)
+		if(first)
 		{
-			begin = begin->getNext();
+			first = first->getNext();
 			sz--;
 		}
 	}
@@ -95,13 +107,13 @@ public:
 	virtual type front() 
 
 	{
-		if(begin) return begin->getData();
+		if(first) return first->getData();
 		return type(0);
 	}
 
 	virtual type back() 
 	{
-		if(begin) return end->getData();
+		if(first) return last->getData();
 		return type(0);
 	}
 
@@ -109,9 +121,9 @@ public:
 	{
 		if(pos > 0 && pos < size())
 		{
-			Node<type>* curr = begin;
+			Element<type>* curr = first;
 			while(pos--) curr = curr->getNext();
-			Node<type>* new_elem = new Node<type>(data);
+			Element<type>* new_elem = new Element<type>(data);
 			new_elem->setNext(curr);
 			new_elem->setPrevious(curr->getPrevious());
 			new_elem->getPrevious()->setNext(new_elem);
@@ -127,7 +139,7 @@ public:
 	{
 		if(pos > 0 && pos < size())
 		{
-			Node<type>* curr = begin;
+			Element<type>* curr = first;
 			while(pos--) {curr = curr->getNext();}
 			curr->getPrevious()->setNext(curr->getNext());
 			curr->getNext()->setPrevious(curr->getPrevious());
@@ -143,32 +155,38 @@ public:
 
 	virtual bool empty() 
 	{
-		if(begin) return true;
+		if(!first) return true;
 		else return false;
-	}
+	}	
+	
+	class iterator
+    	{
+    	private:
+        	Deque<type> element;
+        	Element<type> *curr;
+        
+    	public:  
+        	Element<type>* getCurr() {return curr;}
+        
+        	iterator() {curr = element.first;}
+		iterator(Element<type>* p) {curr = p;}
+		void operator++() { curr = curr->getNext();}
+		void operator--() { curr = curr->getPrevios();}
+		type operator*() { return curr->getData(); }
+		bool operator==(iterator p) { return curr == p.getCurr(); }
+		bool operator!=(iterator p) { return curr != p.getCurr(); }
+	};
 
-	virtual void print()
-	{
-		if(begin)
-		{
-			Node<type> *curr = begin;
-			while(curr != end->getNext()) 
-			{
-				cout << curr->getData() << " ";
-				curr = curr->getNext();
-			}
-		}
-	}
+	virtual iterator begin() {return iterator(first);}
 
-	type operator[](const int index)
+	virtual iterator end() {return iterator(last);}
+
+	friend ostream &operator<<(ostream &output, Deque a)
 	{
-		if(begin && index >= 0 && index < sz)
-		{
-			int in = index;
-			Node<type> *curr = begin;
-			while(in) {curr = curr->getNext(); in --;}
-			return curr->getData();
-		}
-		return type(0);
+		if(a.empty()) return output;
+		Element<type>* curr = a.first;
+		while(curr != a.last) {output << curr->getData() << " "; curr = curr->getNext();}
+		output << curr->getData();
+		return output;
 	}
 };
