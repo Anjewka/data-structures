@@ -152,9 +152,9 @@ template<class type_index, class type_data>
 class Tree : public Avltree<type_index, type_data>
 {
 protected:
-    Node<type_index, type_data>* root;
-    
-    int size;
+	Node<type_index, type_data>* root;
+
+	int size;
     
 public:
 	Tree<type_index, type_data>() {root = nullptr; size = 0;}
@@ -205,33 +205,33 @@ template<class type_index, class type_data>
 class map : Tree<type_index, type_data>
 {
 protected:
-    Tree<type_index, type_data> Map;
+    	Tree<type_index, type_data> Map;
     
 public:
-    map(int size) { while(size--) {Map.insert(type_index(size), type_data());} }
-    map() {}
+    	map(int size) { while(size--) {Map.insert(type_index(size), type_data());} }
+    	map() {}
     
-    virtual int Size() {return Map.Size();}
+    	virtual int Size() {return Map.Size();}
     
-    virtual void insert(type_index index, type_data data)
-    {
-        Map.insert(index, data);
-    }
+    	virtual void insert(type_index index, type_data data)
+    	{
+        	Map.insert(index, data);
+    	}
     
-    virtual void erase(type_index index)
-    {
-        Map.remove(index);
-    }
+    	virtual void erase(type_index index)
+    	{
+        	Map.remove(index);
+    	}
     
-    virtual void clear()
-    {
-        Map.clear(); 
-    }
+	virtual void clear()
+	{
+		Map.clear(); 
+	}
     
-    type_data operator[](type_index index)
-    {
-        return Map[index];
-    }
+    	type_data operator[](type_index index)
+    	{
+        	return Map[index];
+    	}
     
-    friend ostream &operator<<(ostream &output, map p) {return output << p.Map;}
+    	friend ostream &operator<<(ostream &output, map p) {return output << p.Map;}
 };
