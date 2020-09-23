@@ -45,29 +45,29 @@ protected:
 public:
 	List<type>() : Element<type>() {}
 	List<type>(int size) 
-    {
-        sz = size;
-        begin = new Element<type>();
-        Element<type>* curr = first;
-        while(--size)
-        {
-            curr->setNext(new Element<type>());
-            curr = curr->getNext();
-        }
-        last = curr;
-    }
-    List<type>(int size, type data) 
-    {
-        sz = size;
-        first = new Element<type>(data);
-        Element<type>* curr = first;
-        while(--size)
-        {
-            curr->setNext(new Element<type>(data));
-            curr = curr->getNext();
-        }
-        last = curr;
-    }
+    	{
+        	sz = size;
+        	begin = new Element<type>();
+        	Element<type>* curr = first;
+        	while(--size)
+        	{
+            		curr->setNext(new Element<type>());
+            		curr = curr->getNext();
+        	}
+        	last = curr;
+    	}
+    	List<type>(int size, type data) 
+    	{
+        	sz = size;
+        	first = new Element<type>(data);
+        	Element<type>* curr = first;
+        	while(--size)
+        	{
+            		curr->setNext(new Element<type>(data));
+            		curr = curr->getNext();
+        	}
+        	last = curr;
+    	}
     
 	virtual void push_back(type data)
 	{
