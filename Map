@@ -316,7 +316,7 @@ public:
             		}            
         	}
 
-        	IndexData* operator*() {return new IndexData(curr->getIndex(), curr->getData());}
+		IndexData* operator->() {return new IndexData(curr->getIndex(), curr->getData());}
        		bool operator==(iterator p) {return curr == p.getCurr();}
         	bool operator!=(iterator p) {return curr != p.getCurr();}
     	};
