@@ -1034,38 +1034,3 @@ namespace stl
         }
     };
 }
-
-int main()
-{
-    stl::map<int, int> m;
-    m.insert(1, 1);
-    m.insert(2, 2);
-    m.insert(3, 3);
-    m.insert(4, 4);
-    m.insert(5, 5);
-    std::cout << "Map:" << '\n';
-    stl::map<int, int>::iterator i = m.begin();
-    for(; i != m.end() ; ++i) {std:: cout << i.first << " " << i.second << '\n';}
-    std::cout << m.end().first << " " << m.end().second; 
-
-    std::cout << '\n' << "Set:" << '\n';
-    stl::set<int> s;
-    s.insert(2);
-    s.insert(0);
-    s.insert(1);
-    stl::set<int>::iterator i1 = s.begin();
-    for(; i1 != s.end() ; ++i1) {std:: cout << *i1 << '\n';}
-    std::cout << *s.end();
-    std::cout << '\n' << "list:" << '\n';
-    stl::list<int> l;
-    l.push_back(0);
-    l.push_back(2);
-    l.push_back(4);
-    l.push_back(5);
-    l.push_back(1);
-    l.push_back(3);
-    stl::list<int>::iterator i2 = l.begin();
-    for(; i2 != l.end() ; ++i2) {std:: cout << *i2 << '\n';}
-    std::cout << *l.end();
-    return 0;
-}
