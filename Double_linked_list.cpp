@@ -1,102 +1,93 @@
 #include <iostream>
-#include <iterator>
-using namespace std;
 
-template<class type>
+template<class T>
 class Element
 {
 protected:
-	Element<type> *next;
-	Element<type> *previous;
-	type data;
-
+	T data;
+	Element<T>* next;
+	Element<T>* previous;
 public:
-	Element () {next = nullptr; data = type(); previous = nullptr;}
+	Element() {data = T(); next = previous = nullptr;}
+	Element(T d) {data = d; next = previous = nullptr;}
 
-	Element(Element<type> *n) {next = n; data = type(); previous = nullptr;}
-
-	Element(Element<type> *n, type d) {data = d; next = n; previous = nullptr;}
-
-	Element(type d) {next = nullptr; data = d; previous = nullptr;}
-
-	virtual void setData(type d) {data = d;}
-
-	virtual void setNext(Element<type> *n) {next = n;}
-
-	virtual void setPrevious(Element<type> *pre) {previous = pre;}
-
-	virtual type getData() {return data;}
-
-	virtual Element<type>* getNext() {return next;}
-
-	virtual Element<type>* getPrevious() {return previous;}
+	virtual T& getData() {T& d = data; return d;}
+	virtual Element<T>* getNext() {return next;}
+	virtual Element<T>* getPrevious() {return previous;}
+	virtual void setData(T d) {data = d;}
+	virtual void setNext(Element<T> *n) {next = n;}
+	virtual void setPrevious(Element<T> *p) {previous = p;}
 };
 
-template<class type>
-class List : public Element<type>
+template<class T>
+class list
 {
-protected:
-	Element<type> *first = nullptr;
-	Element<type> *last = nullptr;
-    
-    
+private:
+	Element<T> *first = nullptr;
+	Element<T> *last = nullptr;
+	
 	int sz = 0;
 
 public:
-	List<type>() : Element<type>() {}
-	List<type>(int size) 
-    	{
-        	sz = size;
-        	begin = new Element<type>();
-        	Element<type>* curr = first;
-        	while(--size)
-        	{
-            		curr->setNext(new Element<type>());
-            		curr = curr->getNext();
-        	}
-        	last = curr;
-    	}
-    	List<type>(int size, type data) 
-    	{
-        	sz = size;
-        	first = new Element<type>(data);
-        	Element<type>* curr = first;
-        	while(--size)
-        	{
-            		curr->setNext(new Element<type>(data));
-            		curr = curr->getNext();
-        	}
-        	last = curr;
-    	}
-    
-	virtual void push_back(type data)
+	list<T>() {}
+	list<T>(int size) 
+	{
+		sz = size;
+		begin = new Element<T>();
+		Element<T>* curr = first;
+		while(--size)
+		{
+			curr->getNext() = new Element<T>();
+			curr = curr->getNext();
+		}
+		last = curr;
+	}
+	list<T>(int size, T data) 
+	{
+		sz = size;
+		first = new Element<T>(data);
+		Element<T>* curr = first;
+		while(--size)
+		{
+			curr->setNext(new Element<T>(data));
+			curr = curr->getNext();
+		}
+		last = curr;
+	}
+	~list<T>()
+	{
+		while(last != first) {pop_back();}
+		delete last;
+	}
+
+	virtual void push_back(T data)
 	{
 		if(first)
 		{
-			Element<type> *curr = last;
-			curr->setNext(new Element<type>(data));
+			Element<T> *curr = last;
+			curr->setNext(new Element<T>(data));
 			last = curr->getNext();	
 			last->setPrevious(curr);
 		}
 		else
 		{
-			first = last = new Element<type>(data);
+			first = last = new Element<T>(data);
 		}
 		sz++;
 	}
 
-	virtual void push_front(type data)
+	virtual void push_front(T data)
 	{
 		if(first)
 		{
-			Element<type> *curr = new Element<type>(data);
+			Element<T> *curr = new Element<T>(data);
 			curr->setNext(first);
 			first = curr;
 			curr->getNext()->setPrevious(curr);
 		}
 		else
 		{
-			first = new Element<type>(data);
+			first = new Element<T>(data);
 			last = first;
 		}
 		sz++;
@@ -105,31 +96,45 @@ public:
 
 	virtual void pop_back() 
 	{
-		if(last) 
+		if(first && first->getNext())
 		{
-			if(last->getPrevious()) {last = last->getPrevious(); last->setNext(nullptr);}
-			else first = last = nullptr;
+			Element<T> *curr = last;
+			last = curr->getPrevious();
+			last->setNext(nullptr);
+			curr->setPrevious(nullptr);
+			delete curr;
 			sz--;
+		}
+		else if(first) 
+		{
+			first = last = nullptr;
 		}
 	}
 
 	virtual void pop_front() 
 	{
-		if(first) 
+		if(first->getNext())
 		{
-			if(first->getNext()) {first = first->getNext(); first->setPrevious(nullptr);}
-			else first = last = nullptr;
+			Element<T>* curr = first;
+			first = curr->getNext();
+			first->setPrevious(nullptr);
+			curr->setNext(nullptr);
+			delete curr;
 			sz--;
+		}
+		else if(first) 
+		{
+			first = last = nullptr;
 		}
 	}
 
-	virtual void insert(int pos, type data)
+	virtual void insert(int pos, T data)
 	{
 		if(pos > 0 && pos < size())
 		{
-			Element<type>* curr = first;
+			Element<T>* curr = first;
 			while(pos--) {curr = curr->getNext();}
-			Element<type>* new_elem = new Element<type>(data);
+			Element<T>* new_elem = new Element<T>(data);
 			new_elem->setNext(curr);
 			new_elem->setPrevious(curr->getPrevious());
 			new_elem->getPrevious()->setNext(new_elem);
@@ -144,12 +149,12 @@ public:
 	{
 		if(pos > 0 && pos < size())
 		{
-			Element<type>* curr = first;
+			Element<T>* curr = first;
 			while(pos--) {curr = curr->getNext();}
 			curr->getPrevious()->setNext(curr->getNext());
 			curr->getNext()->setPrevious(curr->getPrevious());
-            curr->setPrevious(nullptr); curr->setNext(nullptr);
-            delete curr;
+			curr->setPrevious(nullptr); curr->setNext(nullptr);
+			delete curr;
 			sz--;
 		} 
 		else if(pos == 0) {pop_front();}
@@ -165,37 +170,24 @@ public:
 	}
 	
 	class iterator
-    	{
-    	private:
-        	List<type> element;
-        	Element<type> *curr;
-        
-    	public:  
-        	Element<type>* getCurr() {return curr;}
-        
-        	iterator() {curr = element.first;}
-        	iterator(Element<type>* p) {curr = p;}
-        	void operator++() { curr = curr->getNext();}
-        	void operator--() { curr = curr->getPrevios();}
-        	type operator*() { return curr->getData(); }
-        	bool operator==(iterator p) { return curr == p.getCurr(); }
-        	bool operator!=(iterator p) { return curr != p.getCurr(); }
-    	};
-    
-    	virtual iterator begin() {return iterator(first);}
-    
-    	virtual iterator end() {return iterator(last);}
-	
-	friend ostream &operator<<(ostream &output, List<type> a)
-    	{
-        	if(a.empty()) {return output;}
-        	Element<type>* curr = a.first;
-        	while(curr != a.last)
-        	{
-            	output << curr->getData() << " ";
-            	curr = curr->getNext();
-        	}
-        	output << curr->getData();
-        	return output;
-   	}
+	{
+	private:
+		list<T> element;
+		Element<T> *curr;
+		
+	public:  
+		Element<T>* getCurr() {return curr;}
+		
+		iterator() {curr = element.first;}
+		iterator(Element<T>* p) {curr = p;}
+		void operator++() { curr = curr->getNext();}
+		void operator--() { curr = curr->getPrevios();}
+		T &operator*() { return curr->getData(); }
+		bool operator==(iterator p) { return curr == p.getCurr(); }
+		bool operator!=(iterator p) { return curr != p.getCurr(); }
+	};
+
+	virtual iterator begin() {return iterator(first);}
+
+	virtual iterator end() {return iterator(last);}
 };
