@@ -114,6 +114,14 @@ namespace stl
             }
             last = curr;
         }
+        ~deque() 
+        {
+            if(!empty())
+            {
+                while(last != first) {pop_back();}
+                delete first;
+            }
+        }
 
         virtual void push_back(T data)
         {
@@ -149,19 +157,35 @@ namespace stl
 
         virtual void pop_back()
         {
-            if(first)
+            if(first && first->getNext())
             {
-                last = last->getPrevious();
+                Element<T> *curr = last;
+                last = curr->getPrevious();
+                last->setNext(nullptr);
+                curr->setPrevious(nullptr);
+                delete curr;
                 sz--;
+            }
+            else if(first) 
+            {
+                first = last = nullptr;
             }
         }
 
         virtual void pop_front()
         {
-            if(first)
+            if(first->getNext())
             {
-                first = first->getNext();
+                Element<T>* curr = first;
+                first = curr->getNext();
+                first->setPrevious(nullptr);
+                curr->setNext(nullptr);
+                delete curr;
                 sz--;
+            }
+            else if(first) 
+            {
+                first = last = nullptr;
             }
         }
 
@@ -208,7 +232,6 @@ namespace stl
             }
             else if(pos == 0) {pop_front();}
             else if(pos == size()) {pop_back();}
-            else return;
         }
 
         virtual int size() {return sz;}
@@ -355,70 +378,75 @@ namespace stl
         virtual iterator end() {return iterator(last);}
     };
 
-    template<class type>
+    template<class T>
     class list
     {
     private:
-        Element<type> *first = nullptr;
-        Element<type> *last = nullptr;
+        Element<T> *first = nullptr;
+        Element<T> *last = nullptr;
         
         int sz = 0;
 
     public:
-        list<type>() {}
-        list<type>(int size) 
+        list<T>() {}
+        list<T>(int size) 
         {
             sz = size;
-            begin = new Element<type>();
-            Element<type>* curr = first;
+            begin = new Element<T>();
+            Element<T>* curr = first;
             while(--size)
             {
-                curr->getNext() = new Element<type>();
+                curr->getNext() = new Element<T>();
                 curr = curr->getNext();
             }
             last = curr;
         }
-        list<type>(int size, type data) 
+        list<T>(int size, T data) 
         {
             sz = size;
-            first = new Element<type>(data);
-            Element<type>* curr = first;
+            first = new Element<T>(data);
+            Element<T>* curr = first;
             while(--size)
             {
-                curr->setNext(new Element<type>(data));
+                curr->setNext(new Element<T>(data));
                 curr = curr->getNext();
             }
             last = curr;
         }
-        
-        virtual void push_back(type data)
+        ~list<T>()
+        {
+            while(last != first) {pop_back();}
+            delete last;
+        }
+
+        virtual void push_back(T data)
         {
             if(first)
             {
-                Element<type> *curr = last;
-                curr->setNext(new Element<type>(data));
+                Element<T> *curr = last;
+                curr->setNext(new Element<T>(data));
                 last = curr->getNext();	
                 last->setPrevious(curr);
             }
             else
             {
-                first = last = new Element<type>(data);
+                first = last = new Element<T>(data);
             }
             sz++;
         }
 
-        virtual void push_front(type data)
+        virtual void push_front(T data)
         {
             if(first)
             {
-                Element<type> *curr = new Element<type>(data);
+                Element<T> *curr = new Element<T>(data);
                 curr->setNext(first);
                 first = curr;
                 curr->getNext()->setPrevious(curr);
             }
             else
             {
-                first = new Element<type>(data);
+                first = new Element<T>(data);
                 last = first;
             }
             sz++;
@@ -427,31 +455,45 @@ namespace stl
 
         virtual void pop_back() 
         {
-            if(last) 
+            if(first && first->getNext())
             {
-                if(last->getPrevious()) {last = last->getPrevious(); last->setNext(nullptr);}
-                else first = last = nullptr;
+                Element<T> *curr = last;
+                last = curr->getPrevious();
+                last->setNext(nullptr);
+                curr->setPrevious(nullptr);
+                delete curr;
                 sz--;
+            }
+            else if(first) 
+            {
+                first = last = nullptr;
             }
         }
 
         virtual void pop_front() 
         {
-            if(first) 
+            if(first->getNext())
             {
-                if(first->getNext()) {first = first->getNext(); first->setPrevious(nullptr);}
-                else first = last = nullptr;
+                Element<T>* curr = first;
+                first = curr->getNext();
+                first->setPrevious(nullptr);
+                curr->setNext(nullptr);
+                delete curr;
                 sz--;
+            }
+            else if(first) 
+            {
+                first = last = nullptr;
             }
         }
 
-        virtual void insert(int pos, type data)
+        virtual void insert(int pos, T data)
         {
             if(pos > 0 && pos < size())
             {
-                Element<type>* curr = first;
+                Element<T>* curr = first;
                 while(pos--) {curr = curr->getNext();}
-                Element<type>* new_elem = new Element<type>(data);
+                Element<T>* new_elem = new Element<T>(data);
                 new_elem->setNext(curr);
                 new_elem->setPrevious(curr->getPrevious());
                 new_elem->getPrevious()->setNext(new_elem);
@@ -466,7 +508,7 @@ namespace stl
         {
             if(pos > 0 && pos < size())
             {
-                Element<type>* curr = first;
+                Element<T>* curr = first;
                 while(pos--) {curr = curr->getNext();}
                 curr->getPrevious()->setNext(curr->getNext());
                 curr->getNext()->setPrevious(curr->getPrevious());
@@ -489,17 +531,17 @@ namespace stl
         class iterator
         {
         private:
-            list<type> element;
-            Element<type> *curr;
+            list<T> element;
+            Element<T> *curr;
             
         public:  
-            Element<type>* getCurr() {return curr;}
+            Element<T>* getCurr() {return curr;}
             
             iterator() {curr = element.first;}
-            iterator(Element<type>* p) {curr = p;}
+            iterator(Element<T>* p) {curr = p;}
             void operator++() { curr = curr->getNext();}
             void operator--() { curr = curr->getPrevios();}
-            type &operator*() { return curr->getData(); }
+            T &operator*() { return curr->getData(); }
             bool operator==(iterator p) { return curr == p.getCurr(); }
             bool operator!=(iterator p) { return curr != p.getCurr(); }
         };
@@ -607,10 +649,10 @@ namespace stl
             else {return balance(p);}
         }
 
-        virtual Node<T>* deleteMin(Node<T>* p)
+        virtual Node<T>* deleteMinimum(Node<T>* p)
         {
             if(!p->getLeft()) {return p->getRight();}
-            p->setLeft(deleteMin(p->getLeft()));
+            p->setLeft(deleteMinimum(p->getLeft()));
             return balance(p);
         }
 
@@ -648,7 +690,7 @@ namespace stl
                 Node<T>* left = p->getLeft(); Node<T>* right = p->getRight();
                 if(!right) {return left;}
                 Node<T>* m = getMinimum(right);
-                m->setRight(deleteMin(right));
+                m->setRight(deleteMinimum(right));
                 if(m->getRight()) {m->getRight()->setParent(m);}
                 m->setLeft(left);
                 if(left) {left->setParent(m);}
@@ -727,7 +769,7 @@ namespace stl
 
         virtual void clear()
         {
-            while(root) {root = Avltree<T>::deleteMin(root);}
+            while(root) {root = Avltree<T>::deleteMinimum(root);}
         }
 
         virtual Node<T>* getRoot() {return root;}
@@ -759,6 +801,8 @@ namespace stl
         {
             if(Set.getRoot()) {Set.setRoot(Avltree<T>::deleteMaximum(Set.getRoot()));}
         }
+
+        virtual void pop_front() {Set.setRoot(Avltree<T>::deleteMinimum(Set.getRoot()));}
 
         virtual Tree<T> getSet() {return Set;}
         
