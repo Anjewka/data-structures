@@ -1,129 +1,155 @@
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
-template<class type>
+template<class T>
 class Element
 {
 protected:
-	type data;
-	Element<type> *next;
-	Element<type> *previous;
+	T data;
+	Element<T>* next;
+	Element<T>* previous;
 public:
-	Element() {data = type(); next = previous = nullptr;}
-	Element(type d) {data = d; next = previous = nullptr;}
+	Element() {data = T(); next = previous = nullptr;}
+	Element(T d) {data = d; next = previous = nullptr;}
+	~Element() {delete next; delete previous;}
 
-	virtual type getData() {return data;}
-	virtual Element<type> *getNext() {return next;}
-	virtual Element<type> *getPrevious() {return previous;}
-	virtual void setData(type d) {data = d;}
-	virtual void setNext(Element<type> *n) {next = n;}
-	virtual void setPrevious(Element<type> *p) {previous = p;}
+	virtual T& getData() {T& d = data; return d;}
+	virtual Element<T>* getNext() {return next;}
+	virtual Element<T>* getPrevious() {return previous;}
+	virtual void setData(T d) {data = d;}
+	virtual void setNext(Element<T> *n) {next = n;}
+	virtual void setPrevious(Element<T> *p) {previous = p;}
 };
 
-template<class type>
-class Deque : public Element<type>
+template<class T>
+class deque
 {
 protected:
-	Element<type> *first;
-	Element<type> *last;
-	int sz = 0;
+	Element<T>* first;
+	Element<T>* last;
+	int sz;
+
 public:
-	Deque() : Element<type>() {first = last = nullptr;}
-	Deque(int size) 
+	deque() {first = last = nullptr; sz = 0;}
+	deque(int size) 
 	{
 		sz = size;
-		first = new Element<type>(type());
-		Element<type> *curr = first;
+		first = new Element<T>(T());
+		Element<T> *curr = first;
 		while(--size)
 		{
-			curr->setNext(new Element<type>(type()));
+			curr->setNext(new Element<T>(T()));
 			curr = curr->getNext();
 		}
 		last = curr;
 	}
-	Deque(int size, type data) 
+	deque(int size, T data) 
 	{
 		sz = size;
-		first = new Element<type>(data);
-		Element<type> *curr = first;
+		first = new Element<T>(data);
+		Element<T> *curr = first;
 		while(--size)
 		{
-			curr->setNext(new Element<type>(data));
+			curr->setNext(new Element<T>(data));
 			curr = curr->getNext();
 		}
 		last = curr;
+	}
+	~deque() 
+	{
+		if(!empty())
+		{
+			while(last != first) {pop_back();}
+			delete first;
+		}
 	}
 
-	virtual void push_back(type data)
+	virtual void push_back(T data)
 	{
 		if(first)
 		{
-			Element<type> *new_elem = last;
-			new_elem->setNext(new Element<type>(data));
+			Element<T> *new_elem = last;
+			new_elem->setNext(new Element<T>(data));
 			last = new_elem->getNext();
 			last->setPrevious(new_elem);
 		}
 		else
 		{
-			first = last = new Element<type>(data);
+			first = last = new Element<T>(data);
 		}
 		sz++;
 	}
 
-	virtual void push_front(type data)
+	virtual void push_front(T data)
 	{
 		if(first)
 		{
-			Element<type> *new_elem = first;
-			new_elem->setPrevious(new Element<type>(data));
+			Element<T> *new_elem = first;
+			new_elem->setPrevious(new Element<T>(data));
 			first = new_elem->getPrevious();
 			first->setNext(new_elem);
 			sz++;
 		}
 		else
 		{
-			first = last = new Element<type>(data);
+			first = last = new Element<T>(data);
 		}
 	}
 
 	virtual void pop_back()
 	{
-		if(first)
+		if(first && first->getNext())
 		{
-			last = last->getPrevious();
+			Element<T> *curr = last;
+			last = curr->getPrevious();
+			last->setNext(nullptr);
+			curr->setPrevious(nullptr);
+			delete curr;
 			sz--;
+		}
+		else if(first) 
+		{
+			first = last = nullptr;
 		}
 	}
 
 	virtual void pop_front()
 	{
-		if(first)
+		if(first->getNext())
 		{
-			first = first->getNext();
+			Element<T>* curr = first;
+			first = curr->getNext();
+			first->setPrevious(nullptr);
+			curr->setNext(nullptr);
+			delete curr;
 			sz--;
+		}
+		else if(first) 
+		{
+			first = last = nullptr;
 		}
 	}
 
-	virtual type front() 
-
+	virtual T front() 
 	{
 		if(first) return first->getData();
-		return type(0);
+		return T(0);
 	}
 
-	virtual type back() 
+	virtual T back() 
 	{
 		if(first) return last->getData();
-		return type(0);
+		return T(0);
 	}
 
-	virtual void insert(int pos, type data)
+	virtual void insert(int pos, T data)
 	{
 		if(pos > 0 && pos < size())
 		{
-			Element<type>* curr = first;
+			Element<T>* curr = first;
 			while(pos--) curr = curr->getNext();
-			Element<type>* new_elem = new Element<type>(data);
+			Element<T>* new_elem = new Element<T>(data);
 			new_elem->setNext(curr);
 			new_elem->setPrevious(curr->getPrevious());
 			new_elem->getPrevious()->setNext(new_elem);
@@ -139,7 +165,7 @@ public:
 	{
 		if(pos > 0 && pos < size())
 		{
-			Element<type>* curr = first;
+			Element<T>* curr = first;
 			while(pos--) {curr = curr->getNext();}
 			curr->getPrevious()->setNext(curr->getNext());
 			curr->getNext()->setPrevious(curr->getPrevious());
@@ -148,7 +174,6 @@ public:
 		}
 		else if(pos == 0) {pop_front();}
 		else if(pos == size()) {pop_back();}
-		else return;
 	}
 
 	virtual int size() {return sz;}
@@ -158,35 +183,139 @@ public:
 		if(!first) return true;
 		else return false;
 	}	
+
+    virtual void clear()
+    {
+        while(last)
+        {
+            pop_back();
+        }
+        last = nullptr;
+        first = nullptr;
+        sz = 0;
+    }
 	
 	class iterator
-    	{
-    	private:
-        	Deque<type> element;
-        	Element<type> *curr;
+    {
+    private:
+       	Element<T>* curr;
         
-    	public:  
-        	Element<type>* getCurr() {return curr;}
+    public:  
+       	Element<T>* getCurr() {if(curr) {return curr;} else {return T();}}
         
-        	iterator() {curr = element.first;}
-		iterator(Element<type>* p) {curr = p;}
-		void operator++() { curr = curr->getNext();}
-		void operator--() { curr = curr->getPrevios();}
-		type operator*() { return curr->getData(); }
-		bool operator==(iterator p) { return curr == p.getCurr(); }
-		bool operator!=(iterator p) { return curr != p.getCurr(); }
+       	iterator() {curr = nullptr;}
+		iterator(Element<T>* p) {curr = p;}
+
+		void operator++() {curr = curr->getNext();}
+
+		void operator--() {curr = curr->getPrevious();}
+
+		T& operator*() 
+        { 
+			return curr->getData();
+        }
+
+		void operator=(T t) 
+		{
+			curr->setData(t);
+		}
+
+        void operator=(iterator i)
+        {
+            curr = i.getCurr();
+        }
+
+		bool operator==(iterator p) {return curr == p.getCurr();}
+
+		bool operator!=(iterator p) {return curr != p.getCurr();}
+
+        bool operator>(iterator i)
+        {
+            Element<T>* newcurr = getCurr();
+            bool res = true;
+            while(newcurr) 
+            {
+                if(newcurr == i.getCurr())
+                {
+                    return false;
+                }
+                newcurr = newcurr->getNext();
+            }
+            return res;
+        } 
+
+		bool operator<(iterator i)
+        {
+            Element<T>* newcurr = i.getCurr();
+            bool res = true;
+            while(newcurr) 
+            {
+                if(newcurr == getCurr())
+                {
+                    return false;
+                }
+                newcurr = newcurr->getNext();
+            }
+            return res;
+        } 
+
+        void operator+=(int n)
+        {
+            while(n--)
+            {
+                if(curr) {curr = curr->getNext();}
+                else {break;}
+            }
+        }
+
+        void operator-=(int n)
+        {
+            while(n--)
+            {
+                if(curr) {curr = curr->getPrevious();}
+                else {break;}
+            }
+        }
+
+        iterator operator+(int n)
+        {
+            while(n--)
+            {
+                if(curr) {curr = curr->getNext();}
+                else {break;}
+            }
+            return iterator(curr);
+        }
+
+        iterator operator-(int n)
+        {
+            while(n--)
+            {
+                if(curr) {curr = curr->getPrevious();}
+                else {break;}
+            }
+            return iterator(curr);
+        }
+
+        friend int operator-(iterator i1, iterator i2)
+        {
+            int ans = 0;
+            if(i1 > i2) 
+            {
+                Element<T>* n = i2.getCurr();
+                while(n != i1.getCurr()) {n = n->getNext(); ans++;}
+            }
+            else
+            {
+                Element<T>* n = i1.getCurr();
+                while(n != i2.getCurr()) {n = n->getNext(); ans++;}               
+                ans *= -1;
+            }
+            return ans;
+        }
 	};
 
 	virtual iterator begin() {return iterator(first);}
 
 	virtual iterator end() {return iterator(last);}
-
-	friend ostream &operator<<(ostream &output, Deque a)
-	{
-		if(a.empty()) return output;
-		Element<type>* curr = a.first;
-		while(curr != a.last) {output << curr->getData() << " "; curr = curr->getNext();}
-		output << curr->getData();
-		return output;
-	}
 };
