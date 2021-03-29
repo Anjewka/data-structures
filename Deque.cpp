@@ -28,23 +28,24 @@ class deque
 protected:
 	Element<T>* first;
 	Element<T>* last;
-	int sz;
+	unsigned int sz;
 
 public:
 	deque() {first = last = nullptr; sz = 0;}
-	deque(int size) 
+	deque(unsigned int size) 
 	{
 		sz = size;
-		first = new Element<T>(T());
+		first = new Element<T>();
 		Element<T> *curr = first;
 		while(--size)
 		{
-			curr->setNext(new Element<T>(T()));
+			curr->setNext(new Element<T>());
+			curr->getNext()->setPrevious(curr);
 			curr = curr->getNext();
 		}
 		last = curr;
 	}
-	deque(int size, T data) 
+	deque(unsigned int size, T data) 
 	{
 		sz = size;
 		first = new Element<T>(data);
@@ -52,6 +53,7 @@ public:
 		while(--size)
 		{
 			curr->setNext(new Element<T>(data));
+			curr->getNext()->setPrevious(curr);
 			curr = curr->getNext();
 		}
 		last = curr;
@@ -143,7 +145,7 @@ public:
 		return T(0);
 	}
 
-	virtual void insert(int pos, T data)
+	virtual void insert(int pos, T&& data)
 	{
 		if(pos > 0 && pos < size())
 		{
@@ -158,7 +160,7 @@ public:
 		}
 		else if(pos == 0) push_front(data);
 		else if(pos == size()) push_back(data);
-		else return;
+		return;
 	}
 
 	virtual void erase(int pos)
@@ -176,7 +178,7 @@ public:
 		else if(pos == size()) {pop_back();}
 	}
 
-	virtual int size() {return sz;}
+	virtual unsigned int size() {return sz;}
 
 	virtual bool empty() 
 	{
@@ -201,7 +203,11 @@ public:
        	Element<T>* curr;
         
     public:  
-       	Element<T>* getCurr() {if(curr) {return curr;} else {return T();}}
+       	Element<T>* getCurr() 
+		{
+			if(curr) {return curr;} 
+			else {return T();}
+		}
         
        	iterator() {curr = nullptr;}
 		iterator(Element<T>* p) {curr = p;}
@@ -214,11 +220,6 @@ public:
         { 
 			return curr->getData();
         }
-
-		void operator=(T t) 
-		{
-			curr->setData(t);
-		}
 
         void operator=(iterator i)
         {
@@ -296,26 +297,18 @@ public:
             }
             return iterator(curr);
         }
-
-        friend int operator-(iterator i1, iterator i2)
-        {
-            int ans = 0;
-            if(i1 > i2) 
-            {
-                Element<T>* n = i2.getCurr();
-                while(n != i1.getCurr()) {n = n->getNext(); ans++;}
-            }
-            else
-            {
-                Element<T>* n = i1.getCurr();
-                while(n != i2.getCurr()) {n = n->getNext(); ans++;}               
-                ans *= -1;
-            }
-            return ans;
-        }
 	};
 
 	virtual iterator begin() {return iterator(first);}
 
 	virtual iterator end() {return iterator(last);}
+
+	friend ostream &operator<<(ostream &output, deque a)
+	{
+		if(a.empty()) return output;
+		Element<T>* curr = a.first;
+		while(curr != a.last) {output << curr->getData() << " "; curr = curr->getNext();}
+		output << curr->getData();
+		return output;
+	}
 };
