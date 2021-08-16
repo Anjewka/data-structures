@@ -43,9 +43,4 @@ public:
 		int m = (l1 + r1) / 2;
 		return segment_sum(2 * curr, l1, m, l, min(m, r)) + segment_sum(2 * curr + 1, m + 1, r1, max(m + 1, l), r);
 	}
-
-	void print()
-	{
-		for (auto& i : array) { cout << i << " "; }
-	}
 };
