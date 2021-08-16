@@ -158,7 +158,7 @@ public:
 		}
 	}
 
-	virtual void erase(list<T>::iterator pos)
+	virtual void erase(deque<T>::iterator pos)
 	{
 		Element<T>* curr = pos.getCurr();
 		if (curr->getPrevious() && curr->getNext())
@@ -166,8 +166,8 @@ public:
 			curr->getPrevious()->setNext(curr->getNext());
 			curr->getNext()->setPrevious(curr->getPrevious());
 		}
-		else if (curr->getNext()) { curr->getNext()->setPrevious(nullptr); }
-		else if (curr->getPrevious()) { curr->getPrevious()->setNext(nullptr); }
+		else if (curr->getNext()) { curr->getNext()->setPrevious(nullptr); first = curr->getNext(); }
+		else if (curr->getPrevious()) { curr->getPrevious()->setNext(nullptr); last = curr->getPrevious(); }
 		curr->setNext(nullptr);
 		curr->setPrevious(nullptr);
 		delete curr;
