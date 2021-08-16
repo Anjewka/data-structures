@@ -148,16 +148,16 @@ public:
         return balance(p);
     }
 
-    virtual Node<T>* remove(Node<T>* p, T data, int& sz)
+    virtual Node<T>* remove(Node<T>* p, Node<T>* data, int& sz)
     {
         if (!p) { return nullptr; sz--; }
-        if (data < p->getData())
+        if (data->getData() < p->getData())
         {
             Node<T>* child = remove(p->getLeft(), data, sz);
             p->setLeft(child);
             if (child) { child->setParent(p); }
         }
-        else if (data > p->getData())
+        else if (data->getData() > p->getData())
         {
             Node<T>* child = remove(p->getRight(), data, sz);
             p->setRight(child);
@@ -240,7 +240,7 @@ public:
         sz++;
     }
 
-    virtual void remove(T data)
+    virtual void remove(Node<T>* data)
     {
         root = Avltree<T>::remove(root, data, sz);
         root = Avltree<T>::balance(root);
@@ -268,6 +268,68 @@ public:
 	set(int s) { while (s--) { Set.insert(T()); } }
 	set() {}
 
+    class iterator : public Avltree<T>
+    {
+    private:
+        Node<T>* curr;
+
+    public:
+
+        iterator() { curr = nullptr; }
+        iterator(Node<T>* p)
+        {
+            curr = p;
+        }
+
+        Node<T>* getCurr() { return curr; }
+
+        void operator++()
+        {
+            if (curr->getRight()) { curr = Avltree<T>::getMinimum(curr->getRight()); }
+            else
+            {
+                Node<T>* tmp = curr;
+                bool check = true;
+                while (curr->getParent() && curr->getParent()->getLeft() != curr)
+                {
+                    if (curr->getParent()) { curr = curr->getParent(); }
+                    else { check = false; break; }
+                }
+                if (check) { curr = curr->getParent(); }
+                else { curr = tmp; }
+            }
+        }
+
+        void operator--()
+        {
+            if (curr->getLeft())
+            {
+                curr = Avltree<T>::getMaximum(curr->getLeft());
+            }
+            else
+            {
+                Node<T>* tmp = curr;
+                bool check = true;
+                while (curr->getParent() && curr->getParent()->getRight() != curr)
+                {
+                    if (curr->getParent()) { curr = curr->getParent(); }
+                    else { check = false; break; }
+                }
+                if (check) { curr = curr->getParent(); }
+                else { curr = tmp; }
+            }
+        }
+
+        T& operator*() { return curr->getData(); }
+
+        bool operator==(iterator p) { return curr == p.getCurr(); }
+        bool operator!=(iterator p) { return curr != p.getCurr(); }
+    };
+
+    virtual iterator begin() { return iterator(Avltree<T>::getMinimum(Set.getRoot())); }
+
+    virtual iterator end() { return iterator(Avltree<T>::getMaximum(Set.getRoot())); }
+
     Tree<T> getTree() { return Set; }
 
 	virtual void insert(T data)
@@ -275,77 +337,15 @@ public:
 		Set.insert(data);
 	}
 
-	virtual void erase(T data)
+	virtual void erase(set<T>::iterator pos)
 	{
-		Set.remove(data);
+		Set.remove(pos.getCurr());
 	}
 
 	virtual void clear()
 	{
 		Set.clear();
 	}
-
-	class iterator : public Avltree<T>
-	{
-	private:
-		Node<T>* curr;
-
-	public:
-
-		iterator() { curr = nullptr; }
-		iterator(Node<T>* p)
-		{
-			curr = p;
-		}
-
-		Node<T>* getCurr() { return curr; }
-
-		void operator++()
-		{
-			if (curr->getRight()) { curr = Avltree<T>::getMinimum(curr->getRight()); }
-			else
-			{
-				Node<T>* tmp = curr;
-				bool check = true;
-				while (curr->getParent() && curr->getParent()->getLeft() != curr)
-				{
-					if (curr->getParent()) { curr = curr->getParent(); }
-					else { check = false; break; }
-				}
-				if (check) { curr = curr->getParent(); }
-				else { curr = tmp; }
-			}
-		}
-
-		void operator--()
-		{
-			if (curr->getLeft())
-			{
-				curr = Avltree<T>::getMaximum(curr->getLeft());
-			}
-			else
-			{
-				Node<T>* tmp = curr;
-				bool check = true;
-				while (curr->getParent() && curr->getParent()->getRight() != curr)
-				{
-					if (curr->getParent()) { curr = curr->getParent(); }
-					else { check = false; break; }
-				}
-				if (check) { curr = curr->getParent(); }
-				else { curr = tmp; }
-			}
-		}
-
-        T& operator*() { return curr->getData(); }
-
-		bool operator==(iterator p) { return curr == p.getCurr(); }
-		bool operator!=(iterator p) { return curr != p.getCurr(); }
-	};
-
-	virtual iterator begin() { return iterator(Avltree<T>::getMinimum(Set.getRoot())); }
-
-	virtual iterator end() { return iterator(Avltree<T>::getMaximum(Set.getRoot())); }
 
 	friend ostream& operator<<(ostream& output, set p) { return output << p.Set; }
 };
