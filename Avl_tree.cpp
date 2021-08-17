@@ -27,159 +27,227 @@ public:
 	}
 };
 
-class Avltree : public Node
+template<class T>
+class Avltree
 {
 protected:
-    
-	void fix(Node* p)
+
+void fix(Node<T>* p)
+{
+    if (p)
+    {
+	int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
+	p->setHeight((h1 > h2 ? h1 : h2) + 1);
+    }
+}
+
+int balanceFactor(Node<T>* a)
+{
+    if (a->getRight() && a->getLeft()) { return a->getRight()->getHeight() - a->getLeft()->getHeight(); }
+    else if (a->getRight()) { return a->getRight()->getHeight(); }
+    else if (a->getLeft()) { return -1 * (a->getLeft()->getHeight()); }
+    else { return 0; }
+}
+
+Node<T>* rightRotate(Node<T>* p)
+{
+    Node<T>* q = p->getLeft();
+    p->setLeft(q->getRight());
+    q->setRight(p);
+    q->setParent(p->getParent());
+    p->setParent(q);
+    if (p->getLeft()) { p->getLeft()->setParent(p); }
+    fix(p);
+    fix(q);
+    return q;
+}
+
+Node<T>* leftRotate(Node<T>* q)
+{
+    Node<T>* p = q->getRight();
+    q->setRight(p->getLeft());
+    p->setLeft(q);
+    p->setParent(q->getParent());
+    q->setParent(p);
+    if (q->getRight()) { q->getRight()->setParent(q); }
+    fix(p);
+    fix(q);
+    return p;
+}
+
+Node<T>* balance(Node<T>* p)
+{
+    fix(p);
+    if (balanceFactor(p) == 2)
+    {
+	if (balanceFactor(p->getRight()) < 0)
 	{
-        	if(p)
-		{
-			int h1 = p->getRight() ? p->getRight()->getHeight() : 0; int h2 = p->getLeft() ? p->getLeft()->getHeight() : 0;
-		    	p->setHeight((h1 > h2 ? h1 : h2) + 1);        
-		}
+	    p->setRight(rightRotate(p->getRight()));
 	}
+	return leftRotate(p);
+    }
 
-	int balanceFactor(Node* a)
+    if (balanceFactor(p) == -2)
+    {
+	if (balanceFactor(p->getLeft()) > 0)
 	{
-		if(a->getRight() && a->getLeft()) return a->getRight()->getHeight() - a->getLeft()->getHeight();
-		else if(a->getRight()) return a->getRight()->getHeight();
-		else if(a->getLeft()) return -(a->getLeft()->getHeight());
-		else return 0; 
-    	}
-
-	Node* rightRotate(Node *p)
-	{
-		Node* q = p->getLeft();
-		p->setLeft(q->getRight());
-		q->setRight(p);
-		fix(p);
-		fix(q);
-		return q;
+	    p->setLeft(leftRotate(p->getLeft()));
 	}
-
-	Node* leftRotate(Node *q)
-	{
-		Node* p = q->getRight();
-		q->setRight(p->getLeft());
-		p->setLeft(q);
-		fix(p); 
-		fix(q);
-		return p;
-	}
-
-	Node* balance(Node* p)
-	{
-		fix(p);
-		if(balanceFactor(p) == 2)
-		{
-			if(balanceFactor(p->getRight()) < 0) 
-            		{
-                		p->setRight(rightRotate(p->getRight()));
-            		}
-			return leftRotate(p);
-		}
-
-		if(balanceFactor(p) == -2)
-		{
-			if(p && p->getLeft() && balanceFactor(p->getLeft()) > 0)
-            		{
-                		p->setLeft(leftRotate(p->getLeft()));
-            		}
-			return rightRotate(p);
-		}
-		return p;
-	}
+	return rightRotate(p);
+    }
+    return p;
+}
 
 public:
-	Avltree() : Node() {}
+Avltree<T>() {}
 
-	virtual Node* insert(Node* p, int data)
-	{
-		if(!p) return new Node(data);
-		if(data < p->getData()) p->setLeft(insert(p->getLeft(), data));
-		else p->setRight(insert(p->getRight(), data));
-		return balance(p);
-	}
+virtual Node<T>* insert(Node<T>* p, T data)
+{
+    if (!p) { return new Node<T>(data); }
+    else if (data < p->getData())
+    {
+	Node<T>* child = insert(p->getLeft(), data);
+	p->setLeft(child);
+	child->setParent(p);
+    }
+    else if (data > p->getData())
+    {
+	Node<T>* child = insert(p->getRight(), data);
+	p->setRight(child);
+	child->setParent(p);
+    }
+    return balance(p);
+}
 
-	virtual Node* findMin(Node* p)
-	{
-		if(p->getLeft()) return findMin(p->getLeft());
-		else return balance(p);
-	}
+virtual Node<T>* getMinimum(Node<T>* p)
+{
+    if (p->getLeft()) { return getMinimum(p->getLeft()); }
+    else { return balance(p); }
+}
 
-	virtual Node* deleteMin(Node* p)
-	{
-		if(!p->getLeft()) return p->getRight();
-		p->setLeft(deleteMin(p->getLeft()));
-		return balance(p);
-	}
+virtual Node<T>* deleteMin(Node<T>* p)
+{
+    if (!p->getLeft()) { return p->getRight(); }
+    p->setLeft(deleteMin(p->getLeft()));
+    return balance(p);
+}
 
-	virtual Node* remove(Node* p, int data, int& sz)
-	{
-		if(!p) {return nullptr; sz--;}
-		if(data < p->getData()) {p->setLeft(remove(p->getLeft(), data, sz));}
-		else if(data > p->getData()) {p->setRight(remove(p->getRight(), data, sz));}
-		else
-		{
-			Node* left = p->getLeft(); Node* right = p->getRight();
-			if(!right) return left;
-			Node* m = findMin(right);
-			m->setRight(deleteMin(m));
-			m->setLeft(left);
-            		sz--;
-			return balance(m);
-		}
-		return balance(p);
-	}
+virtual Node<T>* getMaximum(Node<T>* p)
+{
+    if (p->getRight()) { return getMaximum(p->getRight()); }
+    else { return balance(p); }
+}
+
+virtual Node<T>* deleteMaximum(Node<T>* p)
+{
+    if (!p->getRight()) { return p->getLeft(); }
+    p->setRight(deleteMaximum(p->getRight()));
+    return balance(p);
+}
+
+virtual Node<T>* remove(Node<T>* p, Node<T>* data, int& sz)
+{
+    if (!p) { return nullptr; sz--; }
+    if (data->getData() < p->getData())
+    {
+	Node<T>* child = remove(p->getLeft(), data, sz);
+	p->setLeft(child);
+	if (child) { child->setParent(p); }
+    }
+    else if (data->getData() > p->getData())
+    {
+	Node<T>* child = remove(p->getRight(), data, sz);
+	p->setRight(child);
+	if (child) { child->setParent(p); }
+    }
+    else
+    {
+	Node<T>* left = p->getLeft(); Node<T>* right = p->getRight();
+	if (!right) { return left; }
+	Node<T>* m = getMinimum(right);
+	m->setRight(deleteMin(right));
+	if (m->getRight()) { m->getRight()->setParent(m); }
+	m->setLeft(left);
+	if (left) { left->setParent(m); }
+	sz--;
+	return balance(m);
+    }
+    return balance(p);
+}
 };
 
-class Tree : public Avltree
+template<class T>
+class Tree : public Avltree<T>
 {
 protected:
-    	Node* root;
-    	int sz;
-    
+Node<T>* root;
+int sz;
+
 public:
-	Tree() {root = nullptr; sz = 0;}
-	Tree(int size) 
-    	{
-        	if(size >= 0)
-        	{
-            		sz = size;
-            		if(sz > 0) root = new Node(0);
-            		while(--size) {root = Avltree::insert(root, 0);}
-        	}
-        	else {sz = 0; root = nullptr;}
-    	}
-    	Tree(int size, int data) 
-    	{
-        	if(size >= 0)
-        	{
-            		sz = size;
-            		if(sz > 0) root = new Node(data);
-            		while(--size) {root = Avltree::insert(root, data);}
-        	}
-        	else {sz = 0; root = nullptr;}
-    	}
-    
-    	virtual int size() {return sz;}
-	
-	virtual void insert(int data)
-    	{
-        	root = Avltree::insert(root, data);
-        	sz++;
-    	}
-    
-    	virtual void remove(int data)
-    	{
-        	root = Avltree::remove(root, data, sz);
-    	}
+Tree() { root = nullptr; sz = 0; }
+Tree(int size)
+{
+    if (size >= 0)
+    {
+	sz = size;
+	if (sz > 0) root = new Node<T>(T());
+	while (--size) { root = Avltree<T>::insert(root, T()); }
+    }
+    else { sz = 0; root = nullptr; }
+}
+Tree(int size, T data)
+{
+    if (size >= 0)
+    {
+	sz = size;
+	if (sz > 0) root = new Node<T>(data);
+	while (--size) { root = Avltree<T>::insert(root, data); }
+    }
+    else { sz = 0; root = nullptr; }
+}
 
-	virtual Node* getRoot() {return root;}
+T& operator[](T index)
+{
+    Node<T>* curr = getRoot();
 
-	friend ostream &operator<<(ostream & output, Tree a)
-	{
-		return output << a.getRoot();
-	}
+    while (curr->getData() < index && curr->getRight() || curr->getData() > index && curr->getLeft())
+    {
+	if (curr->getData() < index) curr = curr->getRight();
+	else curr = curr->getLeft();
+    }
+
+    if (curr->getData() == index) { return curr->getData(); }
+    else if (curr->getRight() && curr->getRight()->getData() == index) { return curr->getRight()->getData(); }
+    else if (curr->getLeft() && curr->getLeft()->getData() == index) { return curr->getLeft()->getData(); }
+    else
+    {
+	T d = T();
+	T& data = d;
+	return data;
+    }
+}
+
+virtual int size() { return sz; }
+
+virtual void insert(T data)
+{
+    root = Avltree<T>::insert(root, data);
+    root = Avltree<T>::balance(root);
+    sz++;
+}
+
+virtual void remove(Node<T>* data)
+{
+    root = Avltree<T>::remove(root, data, sz);
+    root = Avltree<T>::balance(root);
+}
+
+virtual void clear()
+{
+    while (root) { root = Avltree<T>::deleteMin(root); }
+}
+
+virtual Node<T>* getRoot() { return root; }
+
+virtual void setRoot(Node<T>* r) { root = r; }
 };
