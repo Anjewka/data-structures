@@ -229,16 +229,16 @@ public:
 	}
 
 	virtual void insert(deque<T>::iterator pos, T data)
-	{
+        {
 		Element<T>* curr = pos.getCurr();
 		Element<T>* new_elem = new Element<T>(data);
-		new_elem->setPrevious(curr->getPrevious());
+		if (curr) { new_elem->setPrevious(curr->getPrevious()); }
 		new_elem->setNext(curr);
-		if (curr->getPrevious()) { curr->getPrevious()->setNext(new_elem); }
-		curr->setPrevious(new_elem);
+		if (curr && curr->getPrevious()) { curr->getPrevious()->setNext(new_elem); }
+		if (curr) { curr->setPrevious(new_elem); }
 		if (first == curr) { first = new_elem; }
 		sz++;
-	}
+        }
 
 	virtual void erase(deque<T>::iterator pos)
 	{
