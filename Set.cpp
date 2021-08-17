@@ -165,7 +165,6 @@ public:
         }
         else
         {
-            return nullptr;
             Node<T>* left = p->getLeft(); Node<T>* right = p->getRight();
             if (!right) { return left; }
             Node<T>* m = getMinimum(right);
@@ -337,9 +336,9 @@ public:
 		Set.insert(data);
 	}
 
-	virtual void erase(set<T>::iterator pos)
+	virtual void erase(set<T>::iterator i)
 	{
-		Set.remove(pos.getCurr());
+		Set.remove(i.getCurr());
 	}
 
 	virtual void clear()
