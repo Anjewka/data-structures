@@ -1,4 +1,5 @@
 #include <iostream>
+using namespace std;
 
 template<class T>
 class Element
@@ -11,7 +12,7 @@ public:
 	Element() { data = T(); next = previous = nullptr; }
 	Element(T d) { data = d; next = previous = nullptr; }
 
-	virtual T& getData() { T& d = data; return d; }
+	virtual T& getData() { return data; }
 	virtual Element<T>* getNext() { return next; }
 	virtual Element<T>* getPrevious() { return previous; }
 	virtual void setData(T d) { data = d; }
@@ -26,13 +27,13 @@ private:
 	Element<T>* first = nullptr;
 	Element<T>* last = nullptr;
 
-	int sz = 0;
+	int _size = 0;
 
 public:
 	list<T>() {}
 	list<T>(int size)
 	{
-		sz = size;
+		_size = size;
 		first = new Element<T>();
 		Element<T>* curr = first;
 		while (--size)
@@ -44,7 +45,7 @@ public:
 	}
 	list<T>(int size, T data)
 	{
-		sz = size;
+		_size = size;
 		first = new Element<T>(data);
 		Element<T>* curr = first;
 		while (--size)
@@ -65,13 +66,16 @@ public:
 		Element<T>* getCurr() { return curr; }
 
 		iterator() { curr = element.first; }
+
 		iterator(Element<T>* p) { curr = p; }
+
 		void operator++() { if (curr->getNext()) { curr = curr->getNext(); } }
-		iterator operator+(int number) 
-		{ 
-			while (number && curr->getNext()) { number--; curr = curr->getNext(); } 
+
+		iterator operator+(int number)
+		{
+			while (number && curr->getNext()) { number--; curr = curr->getNext(); }
 			if (number >= 1 && curr->getNext()) { curr = curr->getNext(); }
-			return iterator(curr); 
+			return iterator(curr);
 		}
 		iterator operator-(int number)
 		{
@@ -80,9 +84,19 @@ public:
 			return iterator(curr);
 		}
 		void operator--() { if (curr->getPrevious()) { curr = curr->getPrevios(); } }
+
 		void operator=(iterator p) { curr = p.getCurr(); }
-		T& operator*() { return curr->getData(); }
+
+		T& operator*() 
+		{
+			T data = T();
+			T& output = data;
+			if(curr) return curr->getData(); 
+			return output;
+		}
+
 		bool operator==(iterator p) { return curr == p.getCurr(); }
+
 		bool operator!=(iterator p) { return curr != p.getCurr(); }
 	};
 
@@ -90,7 +104,7 @@ public:
 
 	virtual iterator end() { return iterator(last); }
 
-	virtual void push_back(T data)
+	virtual void push_back(const T& data)
 	{
 		if (first)
 		{
@@ -103,10 +117,10 @@ public:
 		{
 			first = last = new Element<T>(data);
 		}
-		sz++;
+		_size++;
 	}
 
-	virtual void push_front(T data)
+	virtual void push_front(const T& data)
 	{
 		if (first)
 		{
@@ -120,7 +134,7 @@ public:
 			first = new Element<T>(data);
 			last = first;
 		}
-		sz++;
+		_size++;
 	}
 
 
@@ -136,7 +150,7 @@ public:
 				if (last) { last->setNext(nullptr); }
 				if (curr) { curr->setPrevious(nullptr); }
 				delete curr;
-				--sz;
+				--_size;
 			}
 		}
 	}
@@ -150,7 +164,7 @@ public:
 			if (first) { first->setPrevious(nullptr); }
 			if (curr) { curr->setNext(nullptr); }
 			delete curr;
-			sz--;
+			_size--;
 		}
 		else if (first)
 		{
@@ -158,7 +172,7 @@ public:
 		}
 	}
 
-	virtual void erase(deque<T>::iterator pos)
+	virtual void erase(list<T>::iterator pos)
 	{
 		Element<T>* curr = pos.getCurr();
 		if (curr->getPrevious() && curr->getNext())
@@ -171,10 +185,10 @@ public:
 		curr->setNext(nullptr);
 		curr->setPrevious(nullptr);
 		delete curr;
-		sz--;
+		_size--;
 	}
 
-	virtual void insert(list<T>::iterator pos, T data)
+	virtual void insert(list<T>::iterator pos, const T& data)
 	{
 		Element<T>* curr = pos.getCurr();
 		Element<T>* new_elem = new Element<T>(data);
@@ -183,10 +197,10 @@ public:
 		if (curr->getPrevious()) { curr->getPrevious()->setNext(new_elem); }
 		curr->setPrevious(new_elem);
 		if (first == curr) { first = new_elem; }
-		sz++;
+		_size++;
 	}
 
-	virtual int size() { return sz; }
+	virtual int size() { return _size; }
 
 	virtual bool empty()
 	{
