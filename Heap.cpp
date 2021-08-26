@@ -2,17 +2,17 @@
 using namespace std;
 
 template<class T>
-class Heap
+class heap
 {
 private:
     T* array;
-    int length;
-    int size;
+    unsigned int length;
+    unsigned int size;
 
 public:
-    Heap<T>() { array = new T[100]; length = 0; size = 100; }
+    heap<T>() { array = new T[100]; length = 0; size = 100; }
 
-    Heap<T>(int size)
+    heap<T>(unsigned int size)
     {
         if (size > 0) { array = new T[size]; }
         else { array = new T[100]; }
@@ -20,22 +20,28 @@ public:
         this->size = size;
     }
 
-    int getParentIndex(int index)
+    size_t&  getParentIndex(const size_t& index)
     {
-        if (index < 0 || index > length) return 0;
-        return (index - 1) / 2;
+        size_t out;
+        if (index < 0 || index > length) { out = 0; }
+        else { out = (index - 1) / 2; }
+        return out;
     }
 
-    int getLeftChildIndex(int index)
+    size_t& getLeftChildIndex(const size_t& index)
     {
-        if (index < 0 || index > length) return 0;
-        return (2 * index + 1);
+        size_t out;
+        if (index < 0 || index > length) { out = 0; }
+        else { out = (2 * index + 1); }
+        return out;
     }
 
-    int getRightChildIndex(int index)
+    size_t& getRightChildIndex(const size_t& index)
     {
-        if (index < 0 || index > length) return 0;
-        return (2 * index + 2);
+        size_t out;
+        if (index < 0 || index > length) { out = 0; }
+        else { out = (2 * index + 2); }
+        return out;
     }
 
     bool empty()
@@ -43,11 +49,11 @@ public:
         return length > 0 ? false : true;
     }
 
-    void SiftDown(int i)
+    void SiftDown(size_t i)
     {
-        int left = getLeftChildIndex(i);
-        int right = getRightChildIndex(i);
-        int mi = i;
+        unsigned int left = getLeftChildIndex(i);
+        unsigned int right = getRightChildIndex(i);
+        unsigned int mi = i;
 
         if (left >= length) { return; }
 
@@ -61,7 +67,7 @@ public:
         }
     }
 
-    void SiftUp(int i)
+    void SiftUp(size_t i)
     {
         int p = getParentIndex(i);
 
@@ -79,7 +85,7 @@ public:
         return length > 0 ? array[0] : T();
     }
 
-    void insert(T data)
+    void insert(const T& data)
     {
         if (length >= size)
         {
@@ -92,9 +98,9 @@ public:
         SiftUp(i);
     }
 
-    void erase(T element)
+    void erase(const T& element)
     {
-        int i = 0;
+        size_t i = 0;
         while (i <= length)
         {
             if (array[i] == element) { break; }
@@ -102,13 +108,13 @@ public:
         }
 
         if (empty() || i == length) { return; }
-        if (i >= 0 && i < length) { swap(array[i], array[length - 1]); }
+        if (i < length) { swap(array[i], array[length - 1]); }
         array[length - 1] = 0;
         --length;
         SiftDown(0);
     }
 
-    T ExtractMaximum()
+    T& ExtractMaximum()
     {
         T max = getMaximum();
         swap(array[0], array[length - 1]);
@@ -120,6 +126,6 @@ public:
 
     void print()
     {
-        for (int i = 0; i < length; ++i) { cout << array[i] << " "; }
+        for (size_t i = 0; i < length; ++i) { cout << array[i] << " "; }
     }
 };
