@@ -1,4 +1,5 @@
 #include <iostream>
+using namespace std;
 
 template<class T>
 class Node
@@ -11,7 +12,7 @@ public:
     Node<T>() { data = T(), height = 1, right = left = parent = nullptr; }
     Node<T>(T d) { data = d, height = 1, right = left = parent = nullptr; }
 
-    virtual T& getData() { T& d = data; return d; }
+    virtual T& getData() { return data; }
     virtual int getHeight() { return height; }
     virtual Node<T>* getRight() { return right; }
     virtual Node<T>* getLeft() { return left; }
@@ -133,7 +134,7 @@ protected:
 public:
     Avltree<T>() {}
 
-    virtual Node<T>* insert(Node<T>* p, T data)
+    virtual Node<T>* insert(Node<T>* p, const T& data)
     {
         if (!p) { return new Node<T>(data); }
         else if (data < p->getData())
@@ -177,18 +178,18 @@ public:
         return balance(p);
     }
 
-    virtual Node<T>* remove(Node<T>* p, Node<T>* data, int& sz)
+    virtual Node<T>* remove(Node<T>* p, Node<T>* data, unsigned int& size)
     {
-        if (!p) { return nullptr; sz--; }
+        if (!p) { return nullptr; size--; }
         if (data->getData() < p->getData())
         {
-            Node<T>* child = remove(p->getLeft(), data, sz);
+            Node<T>* child = remove(p->getLeft(), data, size);
             p->setLeft(child);
             if (child) { child->setParent(p); }
         }
         else if (data->getData() > p->getData())
         {
-            Node<T>* child = remove(p->getRight(), data, sz);
+            Node<T>* child = remove(p->getRight(), data, size);
             p->setRight(child);
             if (child) { child->setParent(p); }
         }
@@ -201,7 +202,7 @@ public:
             if (m->getRight()) { m->getRight()->setParent(m); }
             m->setLeft(left);
             if (left) { left->setParent(m); }
-            sz--;
+            size--;
             return balance(m);
         }
         return balance(p);
@@ -213,32 +214,24 @@ class Tree : public Avltree<T>
 {
 protected:
     Node<T>* root;
-    int sz;
+    unsigned int _size;
 
 public:
-    Tree() { root = nullptr; sz = 0; }
-    Tree(int size)
+    Tree() { root = nullptr; _size = 0; }
+    Tree(unsigned int _size)
     {
-        if (size >= 0)
-        {
-            sz = size;
-            if (sz > 0) root = new Node<T>(T());
-            while (--size) { root = Avltree<T>::insert(root, T()); }
-        }
-        else { sz = 0; root = nullptr; }
+        this->_size = _size;
+        root = new Node<T>(T());
+        while (--_size) { root = Avltree<T>::insert(root, T()); }
     }
-    Tree(int size, T data)
+    Tree(unsigned int _size, T data)
     {
-        if (size >= 0)
-        {
-            sz = size;
-            if (sz > 0) root = new Node<T>(data);
-            while (--size) { root = Avltree<T>::insert(root, data); }
-        }
-        else { sz = 0; root = nullptr; }
+            this->_size = _size;
+            root = new Node<T>(data);
+            while (--_size) { root = Avltree<T>::insert(root, data); }
     }
 
-    T& operator[](T index)
+    T& operator[](const T& index)
     {
         Node<T>* curr = getRoot();
 
@@ -259,18 +252,18 @@ public:
         }
     }
 
-    virtual int size() { return sz; }
+    virtual unsigned int size() { return _size; }
 
-    virtual void insert(T data)
+    virtual void insert(const T& data)
     {
         root = Avltree<T>::insert(root, data);
         root = Avltree<T>::balance(root);
-        sz++;
+        _size++;
     }
 
     virtual void remove(Node<T>* data)
     {
-        root = Avltree<T>::remove(root, data, sz);
+        root = Avltree<T>::remove(root, data, _size);
         root = Avltree<T>::balance(root);
     }
 
@@ -288,12 +281,12 @@ template<class T1, class T2>
 class map : public Avltree<pair<T1, T2>>
 {
 protected:
-    Tree<pair<T1, T2>> Map;
+    Tree<pair<T1, T2>> _map;
 
 public:
     map() {}
 
-        class iterator : public Avltree<pair<T1, T2>>
+    class iterator : public Avltree<pair<T1, T2>>
     {
     private:
         Node<pair<T1, T2>>* curr;
@@ -302,22 +295,22 @@ public:
         T1 first; T2 second;
 
         iterator() { curr = nullptr; first = T1(); second = T2(); }
-        iterator(Node<pair<T1, T1>>* p)
+        iterator(Node<pair<T1, T2>>* p)
         {
             curr = p;
             first = curr ? curr->getData().first : T1();
             second = curr ? curr->getData().second : T2();
         }
 
-        Node<pair<T1, T1>>* getCurr() { return curr; }
+        Node<pair<T1, T2>>* getCurr() { return curr; }
 
         void operator++()
         {
             if (!curr) { return; }
-            if (curr->getRight()) { curr = Avltree<pair<T1, T1>>::getMinimum(curr->getRight()); }
+            if (curr->getRight()) { curr = Avltree<pair<T1, T2>>::getMinimum(curr->getRight()); }
             else
             {
-                Node<pair<T1, T1>>* tmp = curr;
+                Node<pair<T1, T2>>* tmp = curr;
                 bool check = true;
                 while (curr->getParent() && curr->getParent()->getLeft() != curr)
                 {
@@ -335,11 +328,11 @@ public:
         {
             if (curr->getLeft())
             {
-                curr = Avltree<pair<T1, T1>>::getMaximum(curr->getLeft());
+                curr = Avltree<pair<T1, T2>>::getMaximum(curr->getLeft());
             }
             else
             {
-                Node<pair<T1, T1>>* tmp = curr;
+                Node<pair<T1, T2>>* tmp = curr;
                 bool check = true;
                 while (curr->getParent() && curr->getParent()->getRight() != curr)
                 {
@@ -357,39 +350,39 @@ public:
         bool operator!=(iterator p) { return curr != p.getCurr(); }
     };
 
-    virtual iterator begin() { return iterator(Avltree<pair<T1, T1>>::getMinimum(Map.getRoot())); }
+    virtual iterator begin() { return iterator(Avltree<pair<T1, T2>>::getMinimum(_map.getRoot())); }
 
-    virtual iterator end() { return iterator(Avltree<pair<T1, T1>>::getMaximum(Map.getRoot())); }
+    virtual iterator end() { return iterator(Avltree<pair<T1, T2>>::getMaximum(_map.getRoot())); }
 
-    virtual Tree<pair<T1, T2>> getMap() { return Map; }
+    virtual Tree<pair<T1, T2>> get_map() { return _map; }
 
-    virtual int size() { return Map.size(); }
+    virtual unsigned int size() { return _map.size(); }
 
-    virtual void insert(T1 index, T2 data)
+    virtual void insert(const T1& index, const T2& data)
     {
         pair<T1, T2> p(index, data);
-        Map.insert(p);
+        _map.insert(p);
     }
 
-    virtual void erase(map<T1, T2>::iterator i)
+    virtual void erase(iterator i)
     {
-        Map.remove(i.getCurr());
+        _map.remove(i.getCurr());
     }
 
     virtual void clear()
     {
-        Map.clear();
+        _map.clear();
     }
 
-    T2& operator[](T1 index)
+    T2& operator[](const T1& index)
     {
         pair<T1, T2> p(index, T2());
-        Map.insert(p);
-        return Map[p].second;
+        _map.insert(p);
+        return _map[p].second;
     }
 
     virtual void operator=(map<T1, T2> m)
     {
-        Map = m.Map;
+        _map = m._map;
     }
 };
