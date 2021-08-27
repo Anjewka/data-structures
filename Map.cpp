@@ -202,7 +202,6 @@ public:
             if (m->getRight()) { m->getRight()->setParent(m); }
             m->setLeft(left);
             if (left) { left->setParent(m); }
-            size--;
             return balance(m);
         }
         return balance(p);
@@ -265,6 +264,7 @@ public:
     {
         root = Avltree<T>::remove(root, data, _size);
         root = Avltree<T>::balance(root);
+        _size--;
     }
 
     virtual void clear()
