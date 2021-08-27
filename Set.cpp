@@ -26,7 +26,7 @@ public:
     friend ostream& operator<<(ostream& output, Node<T> *root) 
     {
         if (!root) { return output; }
-        return output << root->getLeft() << root->getData() << " " << root->getRight(); 
+        return output << root->getLeft() << root->getData() << " " << root->getRight();
     }
 };
 
@@ -48,7 +48,7 @@ protected:
     {
         if (a->getRight() && a->getLeft()) { return a->getRight()->getHeight() - a->getLeft()->getHeight(); }
         else if (a->getRight()) { return a->getRight()->getHeight(); }
-        else if (a->getLeft()) { return -(a->getLeft()->getHeight()); }
+        else if (a->getLeft()) { return -1 * (a->getLeft()->getHeight()); }
         else { return 0; }
     }
 
@@ -104,7 +104,7 @@ protected:
 public:
     Avltree<T>() {}
 
-    virtual Node<T>* insert(Node<T>* p, T data)
+    virtual Node<T>* insert(Node<T>* p, const T& data)
     {
         if (!p) { return new Node<T>(data); }
         else if (data < p->getData())
@@ -148,18 +148,18 @@ public:
         return balance(p);
     }
 
-    virtual Node<T>* remove(Node<T>* p, Node<T>* data, int& sz)
+    virtual Node<T>* remove(Node<T>* p, Node<T>* data, unsigned int& size)
     {
-        if (!p) { return nullptr; sz--; }
+        if (!p) { return nullptr; size--; }
         if (data->getData() < p->getData())
         {
-            Node<T>* child = remove(p->getLeft(), data, sz);
+            Node<T>* child = remove(p->getLeft(), data, size);
             p->setLeft(child);
             if (child) { child->setParent(p); }
         }
         else if (data->getData() > p->getData())
         {
-            Node<T>* child = remove(p->getRight(), data, sz);
+            Node<T>* child = remove(p->getRight(), data, size);
             p->setRight(child);
             if (child) { child->setParent(p); }
         }
@@ -172,7 +172,6 @@ public:
             if (m->getRight()) { m->getRight()->setParent(m); }
             m->setLeft(left);
             if (left) { left->setParent(m); }
-            sz--;
             return balance(m);
         }
         return balance(p);
@@ -184,32 +183,24 @@ class Tree : public Avltree<T>
 {
 protected:
     Node<T>* root;
-    int sz;
+    unsigned int _size;
 
 public:
-    Tree() { root = nullptr; sz = 0; }
-    Tree(int size)
+    Tree() { root = nullptr; _size = 0; }
+    Tree(unsigned int _size)
     {
-        if (size >= 0)
-        {
-            sz = size;
-            if (sz > 0) root = new Node<T>(T());
-            while (--size) { root = Avltree<T>::insert(root, T()); }
-        }
-        else { sz = 0; root = nullptr; }
+        this->_size = _size;
+        root = new Node<T>(T());
+        while (--_size) { root = Avltree<T>::insert(root, T()); }
     }
-    Tree(int size, T data)
+    Tree(unsigned int _size, T data)
     {
-        if (size >= 0)
-        {
-            sz = size;
-            if (sz > 0) root = new Node<T>(data);
-            while (--size) { root = Avltree<T>::insert(root, data); }
-        }
-        else { sz = 0; root = nullptr; }
+        this->_size = _size;
+        root = new Node<T>(data);
+        while (--_size) { root = Avltree<T>::insert(root, data); }
     }
 
-    T& operator[](T index)
+    T& operator[](const T& index)
     {
         Node<T>* curr = getRoot();
 
@@ -230,42 +221,41 @@ public:
         }
     }
 
-    virtual int size() { return sz; }
+    virtual unsigned int size() { return _size; }
 
-    virtual void insert(T data)
+    virtual void insert(const T& data)
     {
         root = Avltree<T>::insert(root, data);
         root = Avltree<T>::balance(root);
-        sz++;
+        _size++;
     }
 
     virtual void remove(Node<T>* data)
     {
-        root = Avltree<T>::remove(root, data, sz);
+        root = Avltree<T>::remove(root, data, _size);
         root = Avltree<T>::balance(root);
+        _size--;
     }
 
     virtual void clear()
     {
-        while (root) { root = Avltree<T>::deleteMin(root); }
+        while (root) { root = Avltree<T>::deleteMin(root); _size = 0; }
     }
 
     virtual Node<T>* getRoot() { return root; }
 
     virtual void setRoot(Node<T>* r) { root = r; }
-
-    friend ostream& operator<<(ostream& output, Tree<T> p) { return output << p.getRoot(); }
 };
 
 template<class T>
 class set : public Tree<T>
 {
 protected:
-	Tree<T> Set;
+    Tree<T> _set;
 
 public:
-	set(int s) { while (s--) { Set.insert(T()); } }
-	set() {}
+    set(int s) { while (s--) { _set.insert(T()); } }
+    set() {}
 
     class iterator : public Avltree<T>
     {
@@ -325,26 +315,25 @@ public:
         bool operator!=(iterator p) { return curr != p.getCurr(); }
     };
 
-    virtual iterator begin() { return iterator(Avltree<T>::getMinimum(Set.getRoot())); }
+    virtual iterator begin() { return iterator(Avltree<T>::getMinimum(_set.getRoot())); }
 
-    virtual iterator end() { return iterator(Avltree<T>::getMaximum(Set.getRoot())); }
+    virtual iterator end() { return iterator(Avltree<T>::getMaximum(_set.getRoot())); }
 
-    Tree<T> getTree() { return Set; }
+    Tree<T> getTree() { return _set; }
 
-	virtual void insert(T data)
-	{
-		Set.insert(data);
-	}
+    virtual void clear() { _set.clear(); }
 
-	virtual void erase(set<T>::iterator i)
-	{
-		Set.remove(i.getCurr());
-	}
+    virtual void insert(const T& data)
+    {
+        _set.insert(data);
+    }
 
-	virtual void clear()
-	{
-		Set.clear();
-	}
+    virtual void erase(set<T>::iterator i)
+    {
+        _set.remove(i.getCurr());
+    }
 
-	friend ostream& operator<<(ostream& output, set p) { return output << p.Set; }
+    virtual unsigned int size() { return _set.size(); }
+
+    friend ostream& operator<<(ostream& output, set<T> p) { return output << p.getTree(); }
 };
