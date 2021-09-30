@@ -27,11 +27,11 @@ private:
 	Element<T>* first = nullptr;
 	Element<T>* last = nullptr;
 
-	int _size = 0;
+	size_t _size = 0;
 
 public:
 	list<T>() {}
-	list<T>(int size)
+	list<T>(size_t size)
 	{
 		_size = size;
 		first = new Element<T>();
@@ -43,7 +43,7 @@ public:
 		}
 		last = curr;
 	}
-	list<T>(int size, T data)
+	list<T>(size_t size, const T& data)
 	{
 		_size = size;
 		first = new Element<T>(data);
@@ -100,11 +100,11 @@ public:
 		bool operator!=(iterator p) { return curr != p.getCurr(); }
 	};
 
-	virtual iterator begin() { return iterator(first); }
+	iterator begin() { return iterator(first); }
 
-	virtual iterator end() { return iterator(last); }
+	iterator end() { return iterator(last); }
 
-	virtual void push_back(const T& data)
+	void push_back(const T& data)
 	{
 		if (first)
 		{
@@ -120,7 +120,7 @@ public:
 		_size++;
 	}
 
-	virtual void push_front(const T& data)
+	void push_front(const T& data)
 	{
 		if (first)
 		{
@@ -138,7 +138,7 @@ public:
 	}
 
 
-	virtual void pop_back()
+	void pop_back()
 	{
 		if (!empty())
 		{
@@ -155,7 +155,7 @@ public:
 		}
 	}
 
-	virtual void pop_front()
+	void pop_front()
 	{
 		if (first->getNext())
 		{
@@ -172,7 +172,7 @@ public:
 		}
 	}
 
-	virtual void erase(list<T>::iterator pos)
+	void erase(list<T>::iterator pos)
 	{
 		Element<T>* curr = pos.getCurr();
 		if (curr->getPrevious() && curr->getNext())
@@ -188,7 +188,7 @@ public:
 		_size--;
 	}
 
-	virtual void insert(list<T>::iterator pos, const T& data)
+	void insert(list<T>::iterator pos, const T& data)
 	{
 		Element<T>* curr = pos.getCurr();
 		Element<T>* new_elem = new Element<T>(data);
@@ -200,9 +200,9 @@ public:
 		_size++;
 	}
 
-	virtual int size() { return _size; }
+	size_t size() { return _size; }
 
-	virtual bool empty()
+	bool empty()
 	{
 		if (first) return false;
 		return true;
