@@ -10,7 +10,7 @@ protected:
 	Element<T>* previous;
 public:
 	Element() { data = T(); next = previous = nullptr; }
-	Element(T d) { data = d; next = previous = nullptr; }
+	Element(const T& data) { this->data = data; next = previous = nullptr; }
 
 	virtual T& getData() { return data; }
 	virtual Element<T>* getNext() { return next; }
