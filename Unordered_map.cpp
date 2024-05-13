@@ -251,7 +251,6 @@ private:
         __node = _node_alloc_traits::allocate(__node_alloc, 1);
         ::new(__node) pair_type(__i);
         _node_alloc_traits::construct(__node_alloc, __node, __i);
-        // __node = new _node_type(__i);
         __node->_M_hash = __bkt;
 
         return {true, _M_insert_unique_node(__bkt, __code, __node)};
