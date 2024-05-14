@@ -51,11 +51,13 @@ struct _Avl_tree_node : public _Avl_tree_node_base {
 };
 
 struct _Avl_tree_helper {
+    typedef std::size_t size_type;
+
     static void fix(_Avl_tree_node_base* p) {
         if(!p) {return;}
 
-        size_t h1 = p->_M_right ? p->_M_right->__height : 0;
-        size_t h2 = p->_M_left ? p->_M_left->__height : 0;
+        size_type h1 = p->_M_right ? p->_M_right->__height : 0;
+        size_type h2 = p->_M_left ? p->_M_left->__height : 0;
         p->__height = (h1 > h2 ? h1 : h2) + 1;
     }
 
@@ -259,6 +261,7 @@ private:
     typedef _Avl_tree_node_base*    _Base_node_ptr;
     typedef _Avl_tree_node<T>*      _node_ptr;
     typedef _Comp                   _Key_compare;
+    typedef std::size_t             size_type;
 
 
     _Base_node_ptr root;
@@ -432,14 +435,14 @@ public:
         first = root;
     }
 
-    size_t size() const { return _size; }
+    size_type size() const { return _size; }
 
     iterator insert(const T& __x) {
         return iterator(iterating_insert(__x));
     }
 
     bool remove(const T& __x) {
-        size_t previous = _size;
+        size_type previous = _size;
         root->_M_left = remove(root->_M_left, __x);
         if(root->_M_left) {
             root->_M_left->_M_parent = root;
@@ -452,52 +455,6 @@ public:
     void set_root(_Base_node_ptr r) { root = r; }
 
 public:
-
-    int b_f(_Base_node_ptr a) {
-        if(!a) {return 0;}
-
-        if (a->_M_right && a->_M_left) {
-            return a->_M_right->__tmp_h - a->_M_left->__tmp_h;
-        } else if (a->_M_right) {
-            return a->_M_right->__tmp_h;
-        } else if (a->_M_left) {
-            return -1 * (a->_M_left->__tmp_h);
-        }
-
-        return 0;
-    }
-
-    void fix_all_tree(_Base_node_ptr p) {
-        if(!p) {return;}
-
-        if(!p->_M_right && !p->_M_left) {p->__tmp_h = 1; return;}
-        else if(p->_M_right && !p->_M_left) {
-            fix_all_tree(p->_M_right); 
-            p->__tmp_h = 1 + p->_M_right->__tmp_h;
-if(b_f(p) > 1) {std::cout << "BAD node " << " with h: " << p->__tmp_h<< '\n';}
-else if(b_f(p) < -1) {std::cout << "BAD node " << " with h: " << p->__tmp_h<< '\n';}
-            return;
-        }else if(p->_M_left  && !p->_M_right) {
-            fix_all_tree(p->_M_left); 
-            p->__tmp_h = 1 + p->_M_left->__tmp_h;
-if(b_f(p) > 1) {std::cout << "BAD node " << " with h: " << p->__tmp_h<< '\n';}
-else if(b_f(p) < -1) {std::cout << "BAD node "<< " with h: " << p->__tmp_h<< '\n';}
-            return;
-        } else if(p->_M_right && p->_M_left) {
-            p->__tmp_h = (1 + std::max(p->_M_right->__tmp_h, 
-            p->_M_left->__tmp_h
-            ));
-if(b_f(p) > 1) {std::cout << "BAD node " << " with h: " << p->__tmp_h<< '\n';}
-else if(b_f(p) < -1) {std::cout << "BAD node " << " with h: " << p->__tmp_h<< '\n';}
-            return;
-        }
-        return;
-    }
-
-    void check_fix() {
-        _Base_node_ptr tmp = root->_M_left;
-        fix_all_tree(tmp);
-    }
 
     iterator end() {return root;}
 
@@ -515,6 +472,7 @@ class map
     typedef std::pair<const T1, T2>         type;
     typedef _Compare                        key_compare;
     typedef Tree<type, key_compare, _Alloc> _Tree_type;
+    typedef std::size_t                     size_type;
 
     _Tree_type _M_t;
 
@@ -526,7 +484,7 @@ public:
 
     _Tree_type get_M_t() { return _M_t; }
 
-    size_t size() const { return _M_t.size(); }
+    size_type size() const { return _M_t.size(); }
 
     iterator insert(const T1& _index, const T2& _x) {return _M_t.insert(std::make_pair(_index, _x));}
 
@@ -534,7 +492,7 @@ public:
 
     T2& operator[](const T1& key) {
         type p(key, T2());
-        iterator __i = _M_t._insert(p);
+        iterator __i = _M_t.insert(p);
         return (*__i).second; 
     }
 
@@ -544,8 +502,6 @@ public:
     {
         _M_t = m._M_t;
     }
-
-    void check_fix() {_M_t.check_fix();}
 
     iterator begin() {return _M_t.begin();}
 
