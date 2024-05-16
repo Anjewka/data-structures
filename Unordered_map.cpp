@@ -60,18 +60,18 @@ struct _Node_iterator_base {
     }
 };
 
-template<typename _Value>
-struct _Node_iterator : public _Node_iterator_base<_Value> {
+template<typename T>
+struct _Node_iterator : public _Node_iterator_base<T> {
 private:
-    using _base_type = _Node_iterator_base<_Value>;
+    using _base_type = _Node_iterator_base<T>;
     using _node_type = typename _base_type::_node_type;
 
 public:
-    typedef _Value value_type;
-    typedef _Node_iterator<_Value> iterator;
+    typedef T value_type;
+    typedef _Node_iterator<T> iterator;
 
-    using pointer = _Value*;
-    using reference = _Value&;
+    using pointer = T*;
+    using reference = T&;
 
     _Node_iterator() = default;
 
@@ -87,6 +87,41 @@ public:
     }
 
     _Node_iterator operator++(int) {
+        _Node_iterator __tmp(*this);
+        this->incr();
+        return __tmp;
+    }
+
+    _node_type* _M_node() {return this->_M_iterator;}
+};
+
+template<typename T> 
+struct _Const_node_iterator : public _Node_iterator_base<T> {
+private:
+    using _base_type = _Node_iterator_base<T>;
+    using _node_type = typename _base_type::_node_type;
+
+public:
+    typedef T value_type;
+    typedef _Const_node_iterator<T> const_iterator;
+
+    using pointer = const T*;
+    using reference = const T&;
+
+    _Const_node_iterator() = default;
+
+    _Const_node_iterator(_node_type* __p) : _base_type(__p) {}
+
+    reference operator*() const {return this->_M_iterator->_M_storage;}
+
+    pointer operator->() const {return this->_M_iterator->ptr();}
+    
+    _Const_node_iterator& operator++() {
+        this->incr();
+        return *this;
+    }
+
+    _Const_node_iterator operator++(int) {
         _Node_iterator __tmp(*this);
         this->incr();
         return __tmp;
@@ -127,6 +162,7 @@ public:
     using _node_value_type = _Hash_node_val<pair_type>;
     using _buckets_ptr = _node_ptr*;
     using iterator = typename _Node_iterator<pair_type>::iterator;
+    using const_iterator = typename _Const_node_iterator<pair_type>::const_iterator;
     using __hash = _Hashtable_hash<_Hash>;
 
     typename _Alloc::template rebind<_node_ptr>::other __buckets_alloc;
@@ -151,11 +187,11 @@ private:
         return _M_hash()(__k);
     }
 
-    _node_ptr _M_begin() {return static_cast<_node_ptr>(_M_before_begin._M_nxt); }
+    _node_ptr _M_begin() const {return static_cast<_node_ptr>(_M_before_begin._M_nxt); }
 
     const _Hash&  _M_hash() const { return __hash::_get_const(); }
 
-    size_type _M_bucket_index(size_type _code, size_type _b) {
+    size_type _M_bucket_index(size_type _code, size_type _b) const {
         return _Ranagehash{}(_code, _b);
     }
 
@@ -180,8 +216,12 @@ private:
 
     void rehash(size_type __count) {
         _buckets_ptr __copy_buckets = _buckets_alloc_traits::allocate(__buckets_alloc, __count);
+        for(std::size_t i = 0; i<__count; ++i) {
+            _buckets_alloc_traits::construct(__buckets_alloc, __copy_buckets + i, nullptr);
+        }
+        for(size_t i = 0; i<__count ; ++i) {__copy_buckets[i] = nullptr;}
         _node_ptr __p = _M_begin();
-        _M_before_begin = nullptr;
+        _M_before_begin._M_nxt = nullptr;
         size_type __bbegin_bkt = 0;
 
         while (__p)
@@ -277,11 +317,15 @@ public:
         return __i->second;
     }
     
-    iterator find(const _Key& __k) const {
-        _hash_code __code = _M_hash_code(__k);
-        _hash_code __bkt = _M_bucket_index(__code, _M_bucket_count);
+    iterator find(const _Key& __k) {
+        size_type __code = _M_hash_code(__k);
+        size_type __bkt = _M_bucket_index(__code, _M_bucket_count);
 
-        _node_ptr __node = _M_buckets[__bkt];
+        _node_ptr __node = static_cast<_node_ptr>(_M_buckets[__bkt]);
+
+        if(__node) {
+            __node = __node->_M_next();
+        }
 
         while(__node && __node->_M_hash == __bkt) {
             if(__node->_M_storage.first == __k) {
@@ -290,6 +334,25 @@ public:
             __node = __node->_M_next();
         }
         return end();
+    }
+
+    const_iterator find(const _Key& __k) const {
+        size_type __code = _M_hash_code(__k);
+        size_type __bkt = _M_bucket_index(__code, _M_bucket_count);
+
+        _node_ptr __node = static_cast<_node_ptr>(_M_buckets[__bkt]);
+
+        if(__node) {
+            __node = __node->_M_next();
+        }
+
+        while(__node && __node->_M_hash == __bkt) {
+            if(__node->_M_storage.first == __k) {
+                return const_iterator(__node);
+            }
+            __node = __node->_M_next();
+        }
+        return cend();
     }
 
     void erase(const _Key& __k) {
@@ -354,6 +417,10 @@ public:
 
     iterator end() {return iterator(nullptr);}
 
+    const_iterator cbegin() const {return const_iterator(_M_begin());}
+
+    const_iterator cend() const {return const_iterator(nullptr);}
+
     void print() {
         _node_ptr p = _M_begin();
         while(p) {
@@ -373,9 +440,10 @@ class unordered_map {
     _hashtable _M_h;
 
 public:
-    typedef typename _hashtable::iterator     iterator;
-    typedef typename _hashtable::size_type    size_type;
-    typedef typename _hashtable::pair_type    pair_type;
+    typedef typename _hashtable::const_iterator const_iterator;
+    typedef typename _hashtable::iterator       iterator;
+    typedef typename _hashtable::size_type      size_type;
+    typedef typename _hashtable::pair_type      pair_type;
 
     unordered_map() = default;
 
@@ -387,7 +455,11 @@ public:
         return _M_h[__k];
     }
 
-    iterator find(const _Key& __k) const {
+    iterator find(const _Key& __k) {
+        return _M_h.find(__k); 
+    }
+
+    const_iterator find(const _Key& __k) const {
         return _M_h.find(__k); 
     }
 
@@ -401,11 +473,15 @@ public:
 
     size_type size() const {return _M_h.size();}
 
-    void rehash() {_M_h.rehash();}
+    void rehash(size_type __count) {_M_h.rehash(__count);}
 
     iterator begin() {return _M_h.begin();}
 
     iterator end() {return _M_h.end();}
+
+    const_iterator cbegin() const {return _M_h.cbegin();}
+
+    const_iterator cend() const {return _M_h.cend();}
 
     void print() {_M_h.print();}
 };
