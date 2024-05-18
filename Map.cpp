@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-using namespace std::chrono;
+using namespace std::chrono; 
 
 struct _Avl_tree_node_base {
     typedef _Avl_tree_node_base*     _Base_ptr;
@@ -9,43 +9,49 @@ struct _Avl_tree_node_base {
 
 
     size_type  __height;
-    size_type  __tmp_h;
     _Base_ptr  _M_right, _M_left, _M_parent;
 
-    _Avl_tree_node_base() : __height(0) , __tmp_h(0), _M_right(nullptr), _M_left(nullptr), _M_parent(nullptr) {}
+    _Avl_tree_node_base() noexcept
+            : __height(0) 
+=            , _M_right(nullptr)
+            , _M_left(nullptr)
+            , _M_parent(nullptr) {}
 
-    _Avl_tree_node_base(size_type __height) : __height(__height) , __tmp_h(0), _M_right(nullptr), _M_left(nullptr), _M_parent(nullptr) {}
+    _Avl_tree_node_base(size_type __height) noexcept
+            : __height(__height) 
+            , _M_right(nullptr)
+            , _M_left(nullptr)
+            , _M_parent(nullptr) {}
 
-    const base_type& operator=(const base_type& other) {
+    const base_type& operator=(const base_type& other) noexcept {
         _M_right = other._M_right;
         _M_left = other._M_left;
         _M_parent = other._M_left;
         __height = other.__height;
-        __tmp_h = other.__tmp_h;
         return *this;
     }
-
-    virtual ~_Avl_tree_node_base() {_M_right = _M_left = _M_parent = nullptr; }
 };
 
 template<class T>
 struct _Avl_tree_node : public _Avl_tree_node_base {
     T _M_value;
 
-    _Avl_tree_node() : _M_value(0) {}
-    _Avl_tree_node(const T& d) : _Avl_tree_node_base(1), _M_value(d) {}
+    _Avl_tree_node()
+            : _M_value(T()) {}
+    _Avl_tree_node(const T& d) 
+            : _Avl_tree_node_base(1)
+            , _M_value(d) {}
 
     T* ptr() {return std::addressof(_M_value);}
 
     const T* ptr() const {return std::addressof(_M_value);}
 
-    const _Avl_tree_node& operator=(const _Avl_tree_node& other) {
+    const _Avl_tree_node& operator=(const _Avl_tree_node& other) noexcept {
         _M_value = other._M_value;
         _M_right = other._M_right;
         _M_left = other._M_left;
         _M_parent = other._M_left;
         __height = other.__height;
-        __tmp_h = other.__tmp_h;
         return *this;
     }
 };
@@ -53,7 +59,7 @@ struct _Avl_tree_node : public _Avl_tree_node_base {
 struct _Avl_tree_helper {
     typedef std::size_t size_type;
 
-    static void fix(_Avl_tree_node_base* p) {
+    static void fix(_Avl_tree_node_base* p) noexcept {
         if(!p) {return;}
 
         size_type h1 = p->_M_right ? p->_M_right->__height : 0;
@@ -61,7 +67,7 @@ struct _Avl_tree_helper {
         p->__height = (h1 > h2 ? h1 : h2) + 1;
     }
 
-    static int balance_factor(_Avl_tree_node_base* a) {
+    static int balance_factor(_Avl_tree_node_base* a) noexcept {
         if(!a) {return 0;}
 
         if (a->_M_right && a->_M_left) {
@@ -75,7 +81,7 @@ struct _Avl_tree_helper {
         return 0;
     }
 
-    static _Avl_tree_node_base* right_rotate(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* right_rotate(_Avl_tree_node_base* p) noexcept {
         if(!p) {return p;}
         _Avl_tree_node_base* q = p->_M_left;
         p->_M_left = q->_M_right;
@@ -91,7 +97,7 @@ struct _Avl_tree_helper {
         return q;
     }
 
-    static _Avl_tree_node_base* left_rotate(_Avl_tree_node_base* q) {
+    static _Avl_tree_node_base* left_rotate(_Avl_tree_node_base* q) noexcept {
         if(!q) {return q;}
         _Avl_tree_node_base* p = q->_M_right;
         q->_M_right = p->_M_left;
@@ -106,7 +112,7 @@ struct _Avl_tree_helper {
         return p;
     }
 
-    static _Avl_tree_node_base* balance(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* balance(_Avl_tree_node_base* p) noexcept {
         if(!p) {return nullptr;}
 
         fix(p);
@@ -132,23 +138,23 @@ struct _Avl_tree_helper {
         return p;
     }
 
-    static _Avl_tree_node_base* minimum(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* minimum(_Avl_tree_node_base* p) noexcept {
         if(p->_M_left) { return minimum(p->_M_left); }
         return balance(p);
     }
 
-    static _Avl_tree_node_base* delete_minimum(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* delete_minimum(_Avl_tree_node_base* p) noexcept {
         if(!p->_M_left) { return p->_M_right; }
         p->_M_left = delete_minimum(p->_M_left);
         return balance(p);
     }
 
-    static _Avl_tree_node_base* maximum(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* maximum(_Avl_tree_node_base* p) noexcept {
         if(p->_M_right) { return maximum(p->_M_right); }
         else { return balance(p); }
     }
 
-    static _Avl_tree_node_base* delete_maximum(_Avl_tree_node_base* p) {
+    static _Avl_tree_node_base* delete_maximum(_Avl_tree_node_base* p) noexcept {
         if (!p->_M_right) { return p->_M_left; }
         p->_M_right = delete_maximum(p->_M_right);
         return balance(p);
@@ -156,93 +162,190 @@ struct _Avl_tree_helper {
 };
 
 template<typename T>
-struct _Avl_iterator {
+struct _Avl_iterator_base {
+    typedef _Avl_tree_node_base::_Base_ptr  _Base_ptr;
+    typedef _Avl_tree_node<T>*              _Tree_ptr;
+    typedef _Avl_tree_helper                tree_functions; 
+
+    _Base_ptr _M_iterator;
+
+    _Avl_iterator_base() noexcept 
+            : _M_iterator() {}
+    _Avl_iterator_base(_Base_ptr __p) noexcept 
+            : _M_iterator(__p) {}
+
+    _Base_ptr parent_node() noexcept {return _M_iterator->_M_parent;}
+
+    void incr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_right) { _M_iterator = tree_functions::minimum(_M_iterator->_M_right); 
+        } else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while(_M_iterator->_M_parent && _M_iterator->_M_parent->_M_left != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if(check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
+
+    void decr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_left) {
+            _M_iterator = tree_functions::maximum(_M_iterator->_M_left);
+        }
+        else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while (_M_iterator->_M_parent && _M_iterator->_M_parent->_M_right != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if (check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
+
+    friend bool operator==(const _Avl_iterator_base& __x, const _Avl_iterator_base& __y) noexcept {
+        return __x._M_iterator == __y._M_iterator;
+    }
+
+    friend bool operator!=(const _Avl_iterator_base& __x, const _Avl_iterator_base& __y) noexcept {
+        return __x._M_iterator != __y._M_iterator;
+    }
+};
+
+template<typename T>
+struct _Avl_iterator : _Avl_iterator_base<T> {
+
     typedef T val_type;
     typedef T& reference;
     typedef T* pointer;
 
-    typedef _Avl_tree_node_base::_Base_ptr _Base_ptr;
-    typedef _Avl_tree_node<T>* _Tree_ptr;
+    typedef _Avl_iterator<T>      iterator;
+    typedef _Avl_iterator_base<T> _base_iter;
 
-    using tree_functions = _Avl_tree_helper;
+    using _Base_ptr = typename _base_iter::_Base_ptr;
+    using _Tree_ptr = typename _base_iter::_Tree_ptr;
+    using tree_functions = typename _base_iter::tree_functions;
 
-    typedef _Avl_iterator<T> iterator;
+    _Avl_iterator() noexcept 
+            : _Avl_iterator_base<T>() {}
 
-    _Base_ptr _node;
+    _Avl_iterator(_Base_ptr __x) noexcept 
+            : _Avl_iterator_base<T>(__x) {}
 
-
-
-    _Avl_iterator() : _node() {}
-
-    _Avl_iterator(_Base_ptr __x) : _node(__x) {}
-
-    _Base_ptr node_ptr() {return _node;}
-
-    _Base_ptr parent_node() {return _node->_M_parent;}
-
-    reference operator*() {return *static_cast<_Tree_ptr>(_node)->ptr();}
-
-    pointer operator->() {return static_cast<_Tree_ptr>(_node)->ptr();}
-
-    const iterator& operator++() {
-        if (!_node) { return *this; }
-
-        if (_node->_M_right) { _node = tree_functions::minimum(_node->_M_right); 
-        } else {
-            _Base_ptr tmp = _node;
-            bool check = true;
-            while(_node->_M_parent && _node->_M_parent->_M_left != _node) {
-                if (_node->_M_parent) { _node = _node->_M_parent; }
-                else { check = false; break; }
-            }
-            if(check) { _node = _node->_M_parent; }
-            else { _node = tmp; }
-        }
+    iterator& right() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_right;}
         return *this;
     }
 
-    const iterator& operator--() {
-        if (_node->_M_left) {
-            _node = tree_functions::maximum(_node->_M_left);
-        }
-        else {
-            _Base_ptr tmp = _node;
-            bool check = true;
-            while (_node->_M_parent && _node->_M_parent->_M_right != _node) {
-                if (_node->_M_parent) { _node = _node->_M_parent; }
-                else { check = false; break; }
-            }
-            if (check) { _node = _node->_M_parent; }
-            else { _node = tmp; }
-        }
+    iterator& left() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_left;}
         return *this;
     }
 
-    const iterator& right() {
-        if(_node) {_node = _node->_M_right;}
+    iterator& parent() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_parent;}
         return *this;
     }
 
-    const iterator& left() {
-        if(_node) {_node = _node->_M_left;}
+    reference operator*() noexcept {return *static_cast<_Tree_ptr>(this->_M_iterator)->ptr();}
+
+    pointer operator->() noexcept {return static_cast<_Tree_ptr>(this->_M_iterator)->ptr();}
+
+    iterator& operator++() noexcept {
+        this->incr();
         return *this;
     }
 
-    const iterator& parent() {
-        if(_node) {_node = _node->_M_parent;}
+    iterator& operator--() noexcept {
+        this->decr();
         return *this;
     }
 
-    bool operator==(const iterator& other) {return _node == other._node;}
+    iterator operator++(int) noexcept {
+        iterator __temp = *this;
+        this->incr();
+        return __temp;
+    }
 
-    bool operator!=(const iterator& other) {return _node != other._node;}
+    iterator operator--(int) noexcept {
+        iterator __temp = *this;
+        this->decr();
+        return __temp;
+    }
+};
+
+template<typename T>
+struct _Avl_const_iterator : _Avl_iterator_base<T> {
+
+    typedef const T val_type;
+    typedef const T& reference;
+    typedef const T* pointer;
+
+    typedef _Avl_const_iterator<T> const_iterator;
+    typedef _Avl_iterator_base<T> _base_iter;
+
+    using _Base_ptr = typename _base_iter::_Base_ptr;
+    using _Tree_ptr = typename _base_iter::_Tree_ptr;
+    using tree_functions = typename _base_iter::tree_functions;
+
+    _Avl_const_iterator() noexcept 
+            : _Avl_iterator_base<T>() {}
+
+    _Avl_const_iterator(const _Base_ptr __x) noexcept 
+            : _Avl_iterator_base<T>(__x) {}
+
+    const_iterator& right() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_right;}
+        return *this;
+    }
+
+    const_iterator& left() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_left;}
+        return *this;
+    }
+
+    const_iterator& parent() noexcept {
+        if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_parent;}
+        return *this;
+    }
+
+    reference operator*() const noexcept {return *static_cast<_Tree_ptr>(this->_M_iterator)->ptr();}
+
+    pointer operator->() const noexcept {return static_cast<_Tree_ptr>(this->_M_iterator)->ptr();}
+
+    const_iterator& operator++() noexcept {
+        this->incr();
+        return *this;
+    }
+
+    const_iterator& operator--() noexcept {
+        this->decr();
+        return *this;
+    }
+
+    const_iterator operator++(int) noexcept {
+        const_iterator __temp = *this;
+        this->incr();
+        return __temp;
+    }
+
+    const_iterator operator--(int) noexcept {
+        const_iterator __temp = *this;
+        this->decr();
+        return __temp;
+    }
 };
 
 template<typename T1, typename T2>
 struct comparator {
     typedef std::pair<T1, T2> __pair_type;
 
-    bool operator()(const __pair_type& __x, const __pair_type& __y) {
+    bool operator()(const __pair_type& __x, const __pair_type& __y) const {
         return __x.first < __y.first;
     }
 };
@@ -250,7 +353,11 @@ struct comparator {
 template<typename T, typename _Comp, typename alloc>
 class Tree {
 public:
-    typedef _Avl_iterator<T> iterator;
+    typedef _Avl_iterator<T>       iterator;
+    typedef _Avl_const_iterator<T> const_iterator;
+    typedef _Comp                  _Key_compare;
+    typedef std::size_t            size_type;
+    typedef Tree<T, _Comp, alloc>  _tree;
 
 private:
     typename alloc::template rebind<_Avl_tree_node<T>>::other _allocator;
@@ -258,14 +365,13 @@ private:
     using _Alloc_traits = std::allocator_traits<_alloc_type>;
     using tree_functions = _Avl_tree_helper;
 
-    typedef _Avl_tree_node_base*    _Base_node_ptr;
-    typedef _Avl_tree_node<T>*      _node_ptr;
-    typedef _Comp                   _Key_compare;
-    typedef std::size_t             size_type;
+    typedef _Avl_tree_node_base     _Base_node_type;
+    typedef _Avl_tree_node<T>       _Node_type;
+    typedef _Base_node_type*        _Base_node_ptr;
+    typedef _Node_type*             _Node_ptr;
 
-
-    _Base_node_ptr root;
-    _Base_node_ptr first;
+    _Base_node_type root;
+    _Base_node_ptr first = &root;
     std::size_t _size;
 
     bool _M_compare(const T& __x, const T& __y) const {
@@ -274,19 +380,33 @@ private:
 
     _Base_node_ptr insert(_Base_node_ptr p, const T& __x) {
         if(!p) {
-            _node_ptr _new_node = _Alloc_traits::allocate(_allocator, 1);
-            _Alloc_traits::construct(_allocator, _new_node, (__x));
+            _Node_ptr __new_node;
+            try {
+                __new_node = _Alloc_traits::allocate(_allocator, 1);
+                ::new (__new_node) T(__x);
+                _Alloc_traits::construct(_allocator, __new_node, (__x));
+            } catch(...) {
+                _Alloc_traits::destroy(_allocator, __new_node);
+                _Alloc_traits::deallocate(_allocator, __new_node, 1);
+                throw ;
+            }
+
+            if(M_compare(__x,
+                    first)) {
+                first = __new_node;
+            }
+
             ++_size;
 
-            return _new_node;
+            return __new_node;
         }
         else if(_M_compare(__x,
-                    static_cast<_node_ptr>(p)->_M_value)) {
+                    static_cast<_Node_ptr>(p)->_M_value)) {
             _Base_node_ptr child = insert(p->_M_left, __x);
             p->_M_left = child;
             child->_M_parent = p;
         }
-        else if(_M_compare(static_cast<_node_ptr>(p)->_M_value,
+        else if(_M_compare(static_cast<_Node_ptr>(p)->_M_value,
                     __x)) {
             _Base_node_ptr child = insert(p->_M_right, __x);
             p->_M_right = child;
@@ -296,16 +416,16 @@ private:
     }
 
     _Base_node_ptr iterating_insert(const T& __x) {
-        _Base_node_ptr _finder = root->_M_left;
+        _Base_node_ptr _finder = root._M_left;
         _Base_node_ptr _previous = nullptr;
 
         while(_finder) {
-            if(_M_compare(static_cast<_node_ptr>(_finder)->_M_value,
+            if(_M_compare(static_cast<_Node_ptr>(_finder)->_M_value,
                     __x)) {
                 _previous = _finder;
                 _finder = _finder->_M_right;
             } else if(_M_compare(__x,
-                    static_cast<_node_ptr>(_finder)->_M_value)) {
+                    static_cast<_Node_ptr>(_finder)->_M_value)) {
                 _previous = _finder;
                 _finder = _finder->_M_left;
             } else {
@@ -313,17 +433,25 @@ private:
             }
         }
 
-        _node_ptr __node = _Alloc_traits::allocate(_allocator, 1);
-        ::new(__node) T(__x);
-        _Alloc_traits::construct(_allocator, __node, __x);
+        _Node_ptr __node;
+        try {
+            __node = _Alloc_traits::allocate(_allocator, 1);
+            ::new(__node) T(__x);
+            _Alloc_traits::construct(_allocator, __node, __x);
+        } catch(...) {
+            _Alloc_traits::destroy(_allocator, __node);
+            _Alloc_traits::deallocate(_allocator, __node, 1);
+            throw;
+        }
+
         ++_size;
 
         if(_previous) {
             if(_M_compare(__x,
-                    static_cast<_node_ptr>(_previous)->_M_value)) {
+                    static_cast<_Node_ptr>(_previous)->_M_value)) {
 
                 _previous->_M_left = static_cast<_Base_node_ptr>(__node);
-            } else if(_M_compare(static_cast<_node_ptr>(_previous)->_M_value,
+            } else if(_M_compare(static_cast<_Node_ptr>(_previous)->_M_value,
                     __x)) {
 
                 _previous->_M_right = static_cast<_Base_node_ptr>(__node);
@@ -332,53 +460,54 @@ private:
 
         __node->_M_parent = _previous;
         _finder = __node;
-        if(first == nullptr ||
-                static_cast<_node_ptr>(first)->_M_value > static_cast<_node_ptr>(_finder)->_M_value) {
-            first = _finder;
+        if(first == &root ||
+                _M_compare(static_cast<_Node_ptr>(__node)->_M_value, static_cast<_Node_ptr>(first)->_M_value)) {
+            first = __node;
         }
 
-        if(!root->_M_left) {
+        if(!root._M_left) {
             _finder = __node;
-            root->_M_left = __node;
+            root._M_left = __node;
             return _finder;
         }
 
-        _Base_node_ptr road_to_root = __node->_M_parent;
+        _Base_node_ptr __road_to_root = __node->_M_parent;
 
-        while(root->_M_left != road_to_root) {
-            road_to_root = tree_functions::balance(road_to_root);
-            _Base_node_ptr temp = road_to_root;
+        while(root._M_left != __road_to_root) {
+            __road_to_root = tree_functions::balance(__road_to_root);
+            _Base_node_ptr __temp = __road_to_root;
 
-            road_to_root = temp->_M_parent;
-            if(temp) {
-                if(_M_compare(static_cast<_node_ptr>(temp)->_M_value
-                        , static_cast<_node_ptr>(road_to_root)->_M_value)) {
+            __road_to_root = __temp->_M_parent;
+            if(__temp) {
+                if(_M_compare(static_cast<_Node_ptr>(__temp)->_M_value
+                        , static_cast<_Node_ptr>(__road_to_root)->_M_value)) {
 
-                    road_to_root->_M_left = temp;
-                } else if(_M_compare(static_cast<_node_ptr>(road_to_root)->_M_value
-                        , static_cast<_node_ptr>(temp)->_M_value)) {
+                    __road_to_root->_M_left = __temp;
+                } else if(_M_compare(static_cast<_Node_ptr>(__road_to_root)->_M_value
+                        , static_cast<_Node_ptr>(__temp)->_M_value)) {
 
-                    road_to_root->_M_right = temp;
+                    __road_to_root->_M_right = __temp;
                 }
             }
 
         }
 
-        root->_M_left = tree_functions::balance(road_to_root);
-        root->_M_left->_M_parent = root;
+        root._M_left = tree_functions::balance(__road_to_root);
+        root._M_left->_M_parent = &root;
+
         return _finder;
     }
 
     _Base_node_ptr remove(_Base_node_ptr pos, const T& __k) {
         if(!pos) {return pos;}
 
-        if(_M_compare(static_cast<_node_ptr>(pos)->_M_value, __k)) {
+        if(_M_compare(static_cast<_Node_ptr>(pos)->_M_value, __k)) {
 
             _Base_node_ptr child = remove(pos->_M_right, __k);
             pos->_M_right = child;
             if(child) { child->_M_parent = pos; }
         }
-        else if(_M_compare(__k, static_cast<_node_ptr>(pos)->_M_value)) {
+        else if(_M_compare(__k, static_cast<_Node_ptr>(pos)->_M_value)) {
 
             _Base_node_ptr child = remove(pos->_M_left, __k);
             pos->_M_left = child;
@@ -392,12 +521,9 @@ private:
                 if(left) {first = left;}
                 else {first = pos->_M_parent;}
             }
-            pos->_M_right = nullptr;
-            pos->_M_left = nullptr;
-            pos->_M_parent = nullptr;
 
-            _Alloc_traits::destroy(_allocator, static_cast<_node_ptr>(pos));
-            _Alloc_traits::deallocate(_allocator, static_cast<_node_ptr>(pos), 1);
+            _Alloc_traits::destroy(_allocator, static_cast<_Node_ptr>(pos));
+            _Alloc_traits::deallocate(_allocator, static_cast<_Node_ptr>(pos), 1);
 
             if(!right) { --_size; return left; }
             if(!left) { --_size; return right; }
@@ -415,27 +541,70 @@ private:
 public:
 
     iterator find(const T& __k) {
-        iterator _finder = root->_M_left;
+        _Base_node_ptr _finder = root._M_left;
 
-        while(_finder.node_ptr()) {
-            if(_M_compare(*_finder, __k)) {
-                _finder.right();
-            } else if(_M_compare(__k, *_finder)) {
-                _finder.left();
+        while(_finder) {
+            if(_M_compare(static_cast<_Node_ptr>(_finder)->_M_value, __k)) {
+                _finder = _finder->_M_right;
+            } else if(_M_compare(__k, static_cast<_Node_ptr>(_finder)->_M_value)) {
+                _finder = _finder->_M_left;
             }
-            else {return _finder;}
+            else {return iterator(_finder);}
         }
-        return iterator(root);
+        return iterator(&root);
+    }
+
+    const_iterator find(const T& __k) const {
+        _Base_node_ptr _finder = root._M_left;
+
+        while(_finder) {
+            if(_M_compare(static_cast<_Node_ptr>(_finder)->_M_value, __k)) {
+                _finder = _finder->_M_right;
+            } else if(_M_compare(__k, static_cast<_Node_ptr>(_finder)->_M_value)) {
+                _finder = _finder->_M_left;
+            }
+            else {return const_iterator(_finder);}
+        }
+        return const_iterator(&root);
     }
 
 public:
-    Tree() : _size(0) {
-        root = static_cast<_Base_node_ptr>(_Alloc_traits::allocate(_allocator, 1));
-        _Alloc_traits::construct(_allocator, static_cast<_Base_node_ptr>(root), 0);
-        first = root;
+    Tree() : _size(0) {root._M_parent = &root;}
+
+    Tree(const _tree& __r) : _size(0), first(&root) {
+        root._M_left = __r.get_root()._M_left;
+        root._M_left->_M_parent = &root;
+        root._M_parent = &root;
     }
 
-    size_type size() const { return _size; }
+    Tree& operator=(const _tree& __r) {
+        clear();
+
+        _size = __r.size();
+        root._M_left = __r.get_root()._M_left;
+        root._M_left->_M_parent = &root;
+        root._M_parent = &root;
+
+        return *this;
+    }
+
+    void clear() noexcept {
+        remove_all_nodes(root._M_left);
+
+        _size = 0;
+        first = &root;
+    }
+
+    void remove_all_nodes(_Base_node_ptr __p) {
+        if(!__p) {return;}
+        remove_all_nodes(__p->_M_right);
+        remove_all_nodes(__p->_M_left);
+
+        _Alloc_traits::destroy(_allocator, __p);
+        _Alloc_traits::deallocate(_allocator, static_cast<_Node_ptr>(__p), 1);
+    }
+
+    size_type size() const noexcept { return _size; }
 
     iterator insert(const T& __x) {
         return iterator(iterating_insert(__x));
@@ -443,24 +612,36 @@ public:
 
     bool remove(const T& __x) {
         size_type previous = _size;
-        root->_M_left = remove(root->_M_left, __x);
-        if(root->_M_left) {
-            root->_M_left->_M_parent = root;
+        root._M_left = remove(root._M_left, __x);
+        if(root._M_left) {
+            root._M_left->_M_parent = &root;
         }
         return previous > _size;
     }
 
-    _node_ptr get_root() { return static_cast<_node_ptr>(root->_M_left); }
+    _Base_node_type get_root() const noexcept { return root; }
+
+    _Node_ptr get_first() const noexcept { return static_cast<_Node_ptr>(first); }
 
     void set_root(_Base_node_ptr r) { root = r; }
 
 public:
 
-    iterator end() {return root;}
+    iterator end() noexcept {
+        return iterator(&root);
+    }
 
-    // iterator begin() {return first;}
-    iterator begin() {return tree_functions::minimum(root->_M_left);}
+    iterator begin() noexcept {
+        return first;
+    }
 
+    const_iterator cend() const noexcept {
+        return const_iterator(const_cast<const _Base_node_ptr>(&root));
+    }
+
+    const_iterator cbegin() const noexcept {
+        return first;
+    }
 };
 
 template<typename T1,
@@ -477,14 +658,17 @@ class map
     _Tree_type _M_t;
 
 public:
-    typedef typename Tree<type, key_compare, _Alloc>::iterator iterator;
+    typedef typename _Tree_type::iterator       iterator;
+    typedef typename _Tree_type::const_iterator const_iterator;
 
 public:
     map() : _M_t() {}
 
-    _Tree_type get_M_t() { return _M_t; }
+    map(const map<int, int>& _M_) : _M_t(_M_.get_M_t()) {} 
 
-    size_type size() const { return _M_t.size(); }
+    _Tree_type get_M_t() const noexcept { return _M_t; }
+
+    size_type size() const noexcept { return _M_t.size(); }
 
     iterator insert(const T1& _index, const T2& _x) {return _M_t.insert(std::make_pair(_index, _x));}
 
@@ -496,14 +680,29 @@ public:
         return (*__i).second; 
     }
 
+    void clear() {_M_t.clear();}
+
     iterator find(const T1& key) {return _M_t.find(type(key, T2()));} 
 
-    void operator=(const map<T1, T2>& m)
-    {
+    const_iterator find(const T1& key) const {return _M_t.find(type(key, T2()));} 
+
+    void operator=(const map<T1, T2>& m) {
         _M_t = m._M_t;
     }
 
-    iterator begin() {return _M_t.begin();}
+    iterator begin() noexcept {
+        return _M_t.begin();
+    }
 
-    iterator end() {return _M_t.end();}
+    iterator end() noexcept {
+        return _M_t.end();
+    }
+
+    const_iterator cbegin() const noexcept {
+        return _M_t.cbegin();
+    }
+
+    const_iterator cend() const noexcept {
+        return _M_t.cend();
+    }
 };
