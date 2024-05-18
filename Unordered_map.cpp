@@ -3,41 +3,33 @@
 struct _Hash_node_base {
     _Hash_node_base* _M_nxt;
 
-    _Hash_node_base() : _M_nxt(nullptr) {}
-    _Hash_node_base(_Hash_node_base* next) : _M_nxt(next) {}
-
-    virtual ~_Hash_node_base() {_M_nxt = nullptr;}
+    _Hash_node_base() noexcept : _M_nxt(nullptr) {}
+    _Hash_node_base(_Hash_node_base* next) noexcept : _M_nxt(next) {}
 };
 
 template<typename _Value>
 struct _Hash_node_val {
     typedef _Value value_type;
+    typedef std::size_t hash_type;
 
     _Value _M_storage;
-    size_t _M_hash;
+    hash_type _M_hash;
 
-    value_type* ptr() {return std::addressof(_M_storage);}
-
-    _Hash_node_val(const _Value& __v) : _M_storage(__v), _M_hash(0) {}
-
-    _Hash_node_val(const _Value& __v, size_t __h) : _M_storage(__v), _M_hash(__h) {}
-
-    _Hash_node_val() = default;
+    value_type* ptr() noexcept {return std::addressof(_M_storage);}
 };
 
 template<typename _Value>
 struct _Hash_node 
         : _Hash_node_base
         , _Hash_node_val<_Value> {
-    _Hash_node* _M_next() {return static_cast<_Hash_node*>(_M_nxt);}
+    
+    using hash_type = typename _Hash_node_val<_Value>::hash_type;
 
-    _Hash_node* next() {return static_cast<_Hash_node*>(_M_nxt);}
+    _Hash_node* _M_next() const noexcept {return static_cast<_Hash_node*>(_M_nxt);}
 
-    _Hash_node(const _Value& __v) : _Hash_node_val<_Value>(__v) {}
+    _Hash_node() noexcept {}
 
-    _Hash_node(const _Value& __v, size_t __h) : _Hash_node_val<_Value>::_M_storage(__v) {_Hash_node_val<_Value>::_M_hash = __h;}
-
-    _Hash_node() = default;
+    _Hash_node(const _Value& __v, hash_type __h = 0) noexcept : _Hash_node_val<_Value>{__v, __h} {}
 };
 
 template<typename _Value>
@@ -47,15 +39,15 @@ struct _Node_iterator_base {
     _node_type* _M_iterator;
 
     _Node_iterator_base() : _M_iterator() {}
-    _Node_iterator_base(_node_type* __p) : _M_iterator(__p) {}
+    _Node_iterator_base(_node_type* __p) noexcept : _M_iterator(__p) {}
 
-    void incr() {_M_iterator = _M_iterator->_M_next();}
+    void incr() noexcept {_M_iterator = _M_iterator->_M_next();}
 
-    friend bool operator==(const _Node_iterator_base& __x, const _Node_iterator_base& __y) {
+    friend bool operator==(const _Node_iterator_base& __x, const _Node_iterator_base& __y) noexcept {
         return __x._M_iterator == __y._M_iterator;
     }
 
-    friend bool operator!=(const _Node_iterator_base& __x, const _Node_iterator_base& __y) {
+    friend bool operator!=(const _Node_iterator_base& __x, const _Node_iterator_base& __y) noexcept {
         return __x._M_iterator != __y._M_iterator;
     }
 };
@@ -75,24 +67,24 @@ public:
 
     _Node_iterator() = default;
 
-    _Node_iterator(_node_type* __p) : _base_type(__p) {}
+    _Node_iterator(_node_type* __p) noexcept : _base_type(__p) {}
 
-    reference operator*() {return this->_M_iterator->_M_storage;}
+    reference operator*() noexcept {return this->_M_iterator->_M_storage;}
 
-    pointer operator->() {return this->_M_iterator->ptr();}
+    pointer operator->() noexcept {return this->_M_iterator->ptr();}
     
-    _Node_iterator& operator++() {
+    _Node_iterator& operator++() noexcept {
         this->incr();
         return *this;
     }
 
-    _Node_iterator operator++(int) {
+    _Node_iterator operator++(int) noexcept {
         _Node_iterator __tmp(*this);
         this->incr();
         return __tmp;
     }
 
-    _node_type* _M_node() {return this->_M_iterator;}
+    _node_type* _M_node() noexcept {return this->_M_iterator;}
 };
 
 template<typename T> 
@@ -110,24 +102,24 @@ public:
 
     _Const_node_iterator() = default;
 
-    _Const_node_iterator(_node_type* __p) : _base_type(__p) {}
+    _Const_node_iterator(_node_type* __p) noexcept : _base_type(__p) {}
 
-    reference operator*() const {return this->_M_iterator->_M_storage;}
+    reference operator*() const noexcept {return this->_M_iterator->_M_storage;}
 
-    pointer operator->() const {return this->_M_iterator->ptr();}
+    pointer operator->() const noexcept {return this->_M_iterator->ptr();}
     
-    _Const_node_iterator& operator++() {
+    _Const_node_iterator& operator++() noexcept {
         this->incr();
         return *this;
     }
 
-    _Const_node_iterator operator++(int) {
+    _Const_node_iterator operator++(int) noexcept {
         _Node_iterator __tmp(*this);
         this->incr();
         return __tmp;
     }
 
-    _node_type* _M_node() {return this->_M_iterator;}
+    _node_type* _M_node() noexcept {return this->_M_iterator;}
 };
 
 template<typename T>
@@ -141,7 +133,7 @@ private:
 };
 
 struct _Range_hashing {
-    std::size_t operator()(std::size_t __n, std::size_t __d) {
+    std::size_t operator()(std::size_t __n, std::size_t __d) const noexcept {
         return __n % __d;
     }
 };
@@ -149,7 +141,8 @@ struct _Range_hashing {
 template<typename _Key, 
     typename _Value, 
     typename _Alloc, 
-    typename _Hash, 
+    typename _Hash,
+    typename _Equal,
     typename _Ranagehash = _Range_hashing>
 class _Hashtable : private _Hashtable_hash<_Hash> {
 public:
@@ -164,6 +157,7 @@ public:
     using iterator = typename _Node_iterator<pair_type>::iterator;
     using const_iterator = typename _Const_node_iterator<pair_type>::const_iterator;
     using __hash = _Hashtable_hash<_Hash>;
+    using __equal = _Equal;
 
     typename _Alloc::template rebind<_node_ptr>::other __buckets_alloc;
     typename _Alloc::template rebind<_node_type>::other __node_alloc;
@@ -176,6 +170,7 @@ public:
     typedef std::size_t size_type;
 
     _node_ptr _M_single_bucket = nullptr;
+    __equal __eq;
 
 private:
     _buckets_ptr _M_buckets = &_M_single_bucket;
@@ -191,13 +186,14 @@ private:
 
     const _Hash&  _M_hash() const { return __hash::_get_const(); }
 
-    size_type _M_bucket_index(size_type _code, size_type _b) const {
+    size_type _M_bucket_index(size_type _code, size_type _b) const noexcept {
         return _Ranagehash{}(_code, _b);
     }
 
     void insert_bucket_begin(size_type __x, _node_ptr __node) {
         if(_M_buckets[__x]) {
-            __node->_M_nxt = _M_buckets[__x]->_M_nxt;
+            _node_ptr temp = _M_buckets[__x];
+            __node->_M_nxt = temp->_M_nxt;
             _M_buckets[__x]->_M_nxt = __node;
         } else {
             __node->_M_nxt = _M_before_begin._M_nxt;
@@ -224,8 +220,7 @@ private:
         _M_before_begin._M_nxt = nullptr;
         size_type __bbegin_bkt = 0;
 
-        while (__p)
-        {
+        while (__p) {
             _node_ptr __next = __p->_M_next();
             size_type __bkt = _M_bucket_index(_M_hash_code(__p->_M_storage.first), __count);
             __p->_M_hash = __bkt;
@@ -261,7 +256,12 @@ private:
         }
 
         if(__rehash_count) {
-            rehash(__rehash_count);
+            try {
+                rehash(__rehash_count);
+            } catch(...) {
+                clear();
+                throw ("method rehash");
+            }
             __bkt = _M_bucket_index(__code, _M_bucket_count);
         }
 
@@ -282,15 +282,20 @@ private:
         }
 
         while(__node && __node->_M_hash == __bkt) {
-            if(__node->_M_storage.first == __i.first) {
+            if(__eq(__node->_M_storage.first, __i.first)) {
                 return {false, iterator(__node)};
             }
             __node = __node->_M_next();
         }
 
-        __node = _node_alloc_traits::allocate(__node_alloc, 1);
-        ::new(__node) pair_type(__i);
-        _node_alloc_traits::construct(__node_alloc, __node, __i);
+        try {
+            __node = _node_alloc_traits::allocate(__node_alloc, 1);
+            ::new(__node) pair_type(__i);
+            _node_alloc_traits::construct(__node_alloc, __node, __i);
+        } catch(...) {
+            _node_alloc_traits::deallocate(__node_alloc, __node, 1);
+            throw("can't allocate memmory");
+        }
         __node->_M_hash = __bkt;
 
         return {true, _M_insert_unique_node(__bkt, __code, __node)};
@@ -306,6 +311,8 @@ public:
             emplace(std::make_pair(i.first, i.second));
         }
     }
+
+public:
 
     std::pair<bool, iterator> insert(const _Key& __k, const _Value& __v) {
         return emplace(std::make_pair(__k, __v));
@@ -355,6 +362,18 @@ public:
         return cend();
     }
 
+    _Value& at(const _Key& __k) {
+        iterator __f = find(__k);
+        if(__f == end()) {throw std::out_of_range ("method \"at\"");;}
+        return __f->second;
+    }
+
+    const _Value& at(const _Key& __k) const {
+        iterator __f = find(__k);
+        if(__f == end()) {throw std::out_of_range ("method \"at\"");;}
+        return __f->second;   
+    }
+
     void erase(const _Key& __k) {
         _hash_code __code = _M_hash_code(__k);
         _hash_code __bkt = _M_bucket_index(__code, _M_bucket_count);
@@ -383,7 +402,8 @@ public:
     }
 
     iterator erase(iterator __i) {
-        if(!__i._M_node()) {return __i;}
+        if(!__i._M_node()) { return __i; }
+
         _hash_code __bkt = (__i._M_node())->_M_hash;
         const _Key& __k = __i._M_node()->_M_storage.first;
 
@@ -411,17 +431,36 @@ public:
         return end();
     }
 
-    size_type size() const {return element_count;}   
+    void clear() noexcept {
+        if(!_M_before_begin._M_nxt) {return;}
+        _node_ptr __p = _M_begin();
 
-    iterator begin() {return iterator(_M_begin());}
+        while(__p) {
+            _node_ptr temp = __p->_M_next();
 
-    iterator end() {return iterator(nullptr);}
+            _node_alloc_traits::destroy(__node_alloc, __p);
+            _node_alloc_traits::deallocate(__node_alloc, __p, 1);
+            __p = temp;            
+        }
+        element_count = 0;
+        _M_before_begin._M_nxt = nullptr;
+        _M_single_bucket = nullptr;
+        _M_buckets = &_M_single_bucket;
+        _M_bucket_count = 1;
+        element_count = 0;
+    }
 
-    const_iterator cbegin() const {return const_iterator(_M_begin());}
+    size_type size() const noexcept {return element_count;}   
 
-    const_iterator cend() const {return const_iterator(nullptr);}
+    iterator begin() noexcept {return iterator(_M_begin());}
 
-    void print() {
+    iterator end() noexcept {return iterator(nullptr);}
+
+    const_iterator cbegin() const noexcept {return const_iterator(_M_begin());}
+
+    const_iterator cend() const noexcept {return const_iterator(nullptr);}
+
+    void print() noexcept {
         _node_ptr p = _M_begin();
         while(p) {
             std::cout << p->_M_hash << " " << p->_M_storage.second << "\n";
@@ -433,10 +472,11 @@ public:
 template<typename _Key,
     typename _Value,
     typename _Alloc = std::allocator<std::pair<const _Key, _Value>>, 
-    typename _Hash = std::hash<_Key>>
+    typename _Hash = std::hash<_Key>,
+    typename _Equal = std::equal_to<_Key>>
 class unordered_map {
 
-    typedef _Hashtable<const _Key, _Value, _Alloc, _Hash> _hashtable;
+    typedef _Hashtable<const _Key, _Value, _Alloc, _Hash, _Equal> _hashtable;
     _hashtable _M_h;
 
 public:
@@ -463,6 +503,14 @@ public:
         return _M_h.find(__k); 
     }
 
+    _Value& at(const _Key& __k) {
+        return _M_h.at(__k);
+    }
+
+    const _Value& at(const _Key& __k) const {
+        return _M_h.at(__k);
+    }
+
     void erase(const _Key& __k) {
         _M_h.erase(__k);
     }
@@ -471,17 +519,21 @@ public:
         return _M_h.erase(__i);
     }
 
-    size_type size() const {return _M_h.size();}
+    size_type size() const noexcept {return _M_h.size();}
 
     void rehash(size_type __count) {_M_h.rehash(__count);}
 
-    iterator begin() {return _M_h.begin();}
+    void clear() noexcept {
+        _M_h.clear();
+    }
 
-    iterator end() {return _M_h.end();}
+    iterator begin() noexcept {return _M_h.begin();}
 
-    const_iterator cbegin() const {return _M_h.cbegin();}
+    iterator end() noexcept {return _M_h.end();}
 
-    const_iterator cend() const {return _M_h.cend();}
+    const_iterator cbegin() const noexcept {return _M_h.cbegin();}
 
-    void print() {_M_h.print();}
+    const_iterator cend() const noexcept {return _M_h.cend();}
+
+    void print() noexcept {_M_h.print();}
 };
