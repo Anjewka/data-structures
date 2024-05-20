@@ -1,7 +1,5 @@
 #include <bits/stdc++.h>
 
-using namespace std::chrono; 
-
 struct _Avl_tree_node_base {
     typedef _Avl_tree_node_base*     _Base_ptr;
     typedef _Avl_tree_node_base      base_type;
@@ -13,7 +11,7 @@ struct _Avl_tree_node_base {
 
     _Avl_tree_node_base() noexcept
             : __height(0) 
-=            , _M_right(nullptr)
+            , _M_right(nullptr)
             , _M_left(nullptr)
             , _M_parent(nullptr) {}
 
@@ -37,7 +35,7 @@ struct _Avl_tree_node : public _Avl_tree_node_base {
     T _M_value;
 
     _Avl_tree_node()
-            : _M_value(T()) {}
+            : _Avl_tree_node_base() {}
     _Avl_tree_node(const T& d) 
             : _Avl_tree_node_base(1)
             , _M_value(d) {}
@@ -218,24 +216,61 @@ struct _Avl_iterator_base {
 };
 
 template<typename T>
-struct _Avl_iterator : _Avl_iterator_base<T> {
+struct _Avl_iterator {
+private:
+
+    void incr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_right) { _M_iterator = tree_functions::minimum(_M_iterator->_M_right); 
+        } else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while(_M_iterator->_M_parent && _M_iterator->_M_parent->_M_left != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if(check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
+
+    void decr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_left) {
+            _M_iterator = tree_functions::maximum(_M_iterator->_M_left);
+        }
+        else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while (_M_iterator->_M_parent && _M_iterator->_M_parent->_M_right != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if (check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
+
+public:
+    typedef _Avl_tree_node_base::_Base_ptr  _Base_ptr;
+    typedef _Avl_tree_node<T>*              _Tree_ptr;
+    typedef _Avl_tree_helper                tree_functions; 
+
+    _Base_ptr _M_iterator;
+
+    _Base_ptr parent_node() noexcept {return _M_iterator->_M_parent;}
 
     typedef T val_type;
     typedef T& reference;
     typedef T* pointer;
 
     typedef _Avl_iterator<T>      iterator;
-    typedef _Avl_iterator_base<T> _base_iter;
-
-    using _Base_ptr = typename _base_iter::_Base_ptr;
-    using _Tree_ptr = typename _base_iter::_Tree_ptr;
-    using tree_functions = typename _base_iter::tree_functions;
 
     _Avl_iterator() noexcept 
-            : _Avl_iterator_base<T>() {}
+            : _M_iterator() {}
 
     _Avl_iterator(_Base_ptr __x) noexcept 
-            : _Avl_iterator_base<T>(__x) {}
+            : _M_iterator(__x) {}
 
     iterator& right() noexcept {
         if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_right;}
@@ -277,27 +312,76 @@ struct _Avl_iterator : _Avl_iterator_base<T> {
         this->decr();
         return __temp;
     }
+
+    friend bool operator==(const iterator& __x, const iterator& __y) noexcept {
+        return __x._M_iterator == __y._M_iterator;
+    }
+
+    friend bool operator!=(const iterator& __x, const iterator& __y) noexcept {
+        return __x._M_iterator != __y._M_iterator;
+    }
 };
 
 template<typename T>
-struct _Avl_const_iterator : _Avl_iterator_base<T> {
+struct _Avl_const_iterator {
+private:
 
-    typedef const T val_type;
-    typedef const T& reference;
-    typedef const T* pointer;
+    void incr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_right) { _M_iterator = tree_functions::minimum(_M_iterator->_M_right); 
+        } else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while(_M_iterator->_M_parent && _M_iterator->_M_parent->_M_left != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if(check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
 
-    typedef _Avl_const_iterator<T> const_iterator;
-    typedef _Avl_iterator_base<T> _base_iter;
+    void decr() noexcept {
+        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
+        if (_M_iterator->_M_left) {
+            _M_iterator = tree_functions::maximum(_M_iterator->_M_left);
+        }
+        else {
+            _Base_ptr tmp = _M_iterator;
+            bool check = true;
+            while (_M_iterator->_M_parent && _M_iterator->_M_parent->_M_right != _M_iterator) {
+                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
+                else { check = false; break; }
+            }
+            if (check) { _M_iterator = _M_iterator->_M_parent; }
+            else { _M_iterator = tmp; }
+        }
+    }
 
-    using _Base_ptr = typename _base_iter::_Base_ptr;
-    using _Tree_ptr = typename _base_iter::_Tree_ptr;
-    using tree_functions = typename _base_iter::tree_functions;
+public:
+
+    typedef const _Avl_tree_node_base*      _Base_ptr;
+    typedef const _Avl_tree_node<T>*        _Tree_ptr;
+    typedef _Avl_tree_helper                tree_functions; 
+
+    _Base_ptr _M_iterator;
+
+    _Base_ptr parent_node() noexcept {return _M_iterator->_M_parent;}
+
+    typedef T           val_type;
+    typedef const T&    reference;
+    typedef const T*    pointer;
+
+    typedef _Avl_const_iterator<T>    const_iterator;
 
     _Avl_const_iterator() noexcept 
-            : _Avl_iterator_base<T>() {}
+            : _M_iterator() {}
 
     _Avl_const_iterator(const _Base_ptr __x) noexcept 
-            : _Avl_iterator_base<T>(__x) {}
+            : _M_iterator(__x) {}
+
+    _Avl_const_iterator(const _Avl_iterator<T>& __it) noexcept
+            : _M_iterator(__it._M_iterator) {}
 
     const_iterator& right() noexcept {
         if(this->_M_iterator) {this->_M_iterator = this->_M_iterator->_M_right;}
@@ -339,6 +423,14 @@ struct _Avl_const_iterator : _Avl_iterator_base<T> {
         this->decr();
         return __temp;
     }
+
+    friend bool operator==(const const_iterator& __x, const const_iterator& __y) noexcept {
+        return __x._M_iterator == __y._M_iterator;
+    }
+
+    friend bool operator!=(const const_iterator& __x, const const_iterator& __y) noexcept {
+        return __x._M_iterator != __y._M_iterator;
+    }
 };
 
 template<typename T1, typename T2>
@@ -370,7 +462,11 @@ private:
     typedef _Base_node_type*        _Base_node_ptr;
     typedef _Node_type*             _Node_ptr;
 
-    _Base_node_type root;
+    struct _Avl_tree_node_header : _Avl_tree_node_base {
+        std::size_t h;    
+    };
+
+    _Avl_tree_node_header root{};
     _Base_node_ptr first = &root;
     std::size_t _size;
 
@@ -569,23 +665,18 @@ public:
     }
 
 public:
-    Tree() : _size(0) {root._M_parent = &root;}
-
-    Tree(const _tree& __r) : _size(0), first(&root) {
-        root._M_left = __r.get_root()._M_left;
-        root._M_left->_M_parent = &root;
+    Tree() : first(&root), _size(0) { 
         root._M_parent = &root;
     }
 
-    Tree& operator=(const _tree& __r) {
-        clear();
-
-        _size = __r.size();
-        root._M_left = __r.get_root()._M_left;
-        root._M_left->_M_parent = &root;
+    Tree(const Tree& __r) {
         root._M_parent = &root;
 
-        return *this;
+        auto __i = __r.cbegin();
+        while(__i != __r.cend()) {
+            insert(*__i);
+            ++__i;
+        }
     }
 
     void clear() noexcept {
@@ -602,6 +693,18 @@ public:
 
         _Alloc_traits::destroy(_allocator, __p);
         _Alloc_traits::deallocate(_allocator, static_cast<_Node_ptr>(__p), 1);
+    }
+
+    Tree& operator=(const Tree& __t) {
+        clear();
+
+        auto __i = __t.cbegin();
+        while(__i != __t.cend()) {
+            insert(*__i);
+            ++__i;
+        }        
+
+        return *this;
     }
 
     size_type size() const noexcept { return _size; }
@@ -636,7 +739,7 @@ public:
     }
 
     const_iterator cend() const noexcept {
-        return const_iterator(const_cast<const _Base_node_ptr>(&root));
+        return const_iterator(&root);
     }
 
     const_iterator cbegin() const noexcept {
@@ -650,10 +753,11 @@ template<typename T1,
     typename _Alloc = std::allocator<std::pair<const T1, T2>>>
 class map
 {
-    typedef std::pair<const T1, T2>         type;
-    typedef _Compare                        key_compare;
-    typedef Tree<type, key_compare, _Alloc> _Tree_type;
-    typedef std::size_t                     size_type;
+    typedef std::pair<const T1, T2>                   _Pair_type;
+    typedef _Compare                                  key_compare;
+    typedef Tree<_Pair_type, key_compare, _Alloc>     _Tree_type;
+    typedef std::size_t                               size_type;
+    typedef map<T1, T2, _Compare, _Alloc>             _Map;
 
     _Tree_type _M_t;
 
@@ -664,7 +768,7 @@ public:
 public:
     map() : _M_t() {}
 
-    map(const map<int, int>& _M_) : _M_t(_M_.get_M_t()) {} 
+    map(const _Map& _M_) : _M_t(_M_.get_M_t()) {} 
 
     _Tree_type get_M_t() const noexcept { return _M_t; }
 
@@ -672,22 +776,25 @@ public:
 
     iterator insert(const T1& _index, const T2& _x) {return _M_t.insert(std::make_pair(_index, _x));}
 
-    bool erase(const T1& key) {return _M_t.remove(type(key, T2()));}
+    iterator insert(const std::pair<T1, T2>& __p) {return _M_t.insert(__p);}
+
+    bool erase(const T1& key) {return _M_t.remove(_Pair_type(key, T2()));}
 
     T2& operator[](const T1& key) {
-        type p(key, T2());
+        _Pair_type p(key, T2());
         iterator __i = _M_t.insert(p);
         return (*__i).second; 
     }
 
     void clear() {_M_t.clear();}
 
-    iterator find(const T1& key) {return _M_t.find(type(key, T2()));} 
+    iterator find(const T1& key) {return _M_t.find(_Pair_type(key, T2()));} 
 
-    const_iterator find(const T1& key) const {return _M_t.find(type(key, T2()));} 
+    const_iterator find(const T1& key) const {return _M_t.find(_Pair_type(key, T2()));} 
 
-    void operator=(const map<T1, T2>& m) {
+    _Map& operator=(const _Map& m) {
         _M_t = m._M_t;
+        return *this;
     }
 
     iterator begin() noexcept {
