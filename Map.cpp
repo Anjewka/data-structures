@@ -160,62 +160,6 @@ struct _Avl_tree_helper {
 };
 
 template<typename T>
-struct _Avl_iterator_base {
-    typedef _Avl_tree_node_base::_Base_ptr  _Base_ptr;
-    typedef _Avl_tree_node<T>*              _Tree_ptr;
-    typedef _Avl_tree_helper                tree_functions; 
-
-    _Base_ptr _M_iterator;
-
-    _Avl_iterator_base() noexcept 
-            : _M_iterator() {}
-    _Avl_iterator_base(_Base_ptr __p) noexcept 
-            : _M_iterator(__p) {}
-
-    _Base_ptr parent_node() noexcept {return _M_iterator->_M_parent;}
-
-    void incr() noexcept {
-        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
-        if (_M_iterator->_M_right) { _M_iterator = tree_functions::minimum(_M_iterator->_M_right); 
-        } else {
-            _Base_ptr tmp = _M_iterator;
-            bool check = true;
-            while(_M_iterator->_M_parent && _M_iterator->_M_parent->_M_left != _M_iterator) {
-                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
-                else { check = false; break; }
-            }
-            if(check) { _M_iterator = _M_iterator->_M_parent; }
-            else { _M_iterator = tmp; }
-        }
-    }
-
-    void decr() noexcept {
-        if (!_M_iterator || _M_iterator == _M_iterator->_M_parent) { return; }
-        if (_M_iterator->_M_left) {
-            _M_iterator = tree_functions::maximum(_M_iterator->_M_left);
-        }
-        else {
-            _Base_ptr tmp = _M_iterator;
-            bool check = true;
-            while (_M_iterator->_M_parent && _M_iterator->_M_parent->_M_right != _M_iterator) {
-                if (_M_iterator->_M_parent) { _M_iterator = _M_iterator->_M_parent; }
-                else { check = false; break; }
-            }
-            if (check) { _M_iterator = _M_iterator->_M_parent; }
-            else { _M_iterator = tmp; }
-        }
-    }
-
-    friend bool operator==(const _Avl_iterator_base& __x, const _Avl_iterator_base& __y) noexcept {
-        return __x._M_iterator == __y._M_iterator;
-    }
-
-    friend bool operator!=(const _Avl_iterator_base& __x, const _Avl_iterator_base& __y) noexcept {
-        return __x._M_iterator != __y._M_iterator;
-    }
-};
-
-template<typename T>
 struct _Avl_iterator {
 private:
 
