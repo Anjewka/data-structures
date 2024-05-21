@@ -1,210 +1,300 @@
-#include <iostream>
-using namespace std;
+#include <bits/stdc++.h>
 
-template<class T>
-class Element
-{
-protected:
-	T data;
-	Element<T>* next;
-	Element<T>* previous;
-public:
-	Element() { data = T(); next = previous = nullptr; }
-	Element(const T& data) { this->data = data; next = previous = nullptr; }
-
-	virtual T& getData() { return data; }
-	virtual Element<T>* getNext() { return next; }
-	virtual Element<T>* getPrevious() { return previous; }
-	virtual void setData(T d) { data = d; }
-	virtual void setNext(Element<T>* n) { next = n; }
-	virtual void setPrevious(Element<T>* p) { previous = p; }
+struct _List_node_base {
+	_List_node_base* _M_prev;
+	_List_node_base* _M_next;
 };
 
-template<class T>
-class list
-{
-private:
-	Element<T>* first = nullptr;
-	Element<T>* last = nullptr;
+template<typename T>
+struct _List_node : _List_node_base {
+	T _M_value;
 
-	size_t _size = 0;
+	_List_node(const T& __x) : _M_value(__x) {}
 
+	T* ptr() {return std::addressof(_M_value);}
+
+    const T* ptr() const {return std::addressof(_M_value);}
+};
+
+template<typename T>
+struct _List_iterator {
+	_List_node_base* _M_iterator;
+
+	typedef _List_node_base*   _Base_ptr;
+	typedef _List_iterator     iterator;
+	typedef _List_node<T>*     _Node_ptr;
+
+	typedef T*                 pointer;
+	typedef T&                 reference;
+	typedef T                  value_type;
+
+	_List_iterator() noexcept : _M_iterator() {}
+	_List_iterator(_Base_ptr __p) noexcept : _M_iterator(__p) {}
+
+	_Base_ptr get_base_ptr() noexcept {return _M_iterator;}
+
+	pointer operator->() {return static_cast<_Node_ptr>(_M_iterator)->ptr();}
+
+	reference operator*() {return *static_cast<_Node_ptr>(_M_iterator)->ptr();}
+
+	iterator operator++() noexcept {
+		_M_iterator = _M_iterator->_M_next;
+		return *this;
+	}
+
+	iterator operator++(int) noexcept {
+		iterator __temp = _M_iterator;
+		_M_iterator = _M_iterator->_M_next;
+		return __temp;
+	}
+
+	iterator operator--() noexcept {
+		_M_iterator = _M_iterator->_M_prev;
+		return *this;
+	}
+
+	iterator operator--(int) noexcept {
+		iterator __temp = _M_iterator;
+		_M_iterator = _M_iterator->_M_prev;
+		return __temp;
+	}
+
+	friend bool operator==(const iterator& __l, const iterator& __r) noexcept {
+		return __l._M_iterator == __r._M_iterator;
+	}
+
+	friend bool operator!=(const iterator& __l, const iterator& __r) noexcept {
+		return __l._M_iterator != __r._M_iterator;
+	}
+};
+
+template<typename T>
+struct _List_const_iterator {
+	const _List_node_base* _M_iterator;
+
+	typedef const _List_node_base*         _Base_ptr;
+	typedef const _List_const_iterator     const_iterator;
+	typedef const _List_node<T>*           _Node_ptr;
+
+	typedef const T*                       pointer;
+	typedef const T&                       reference;
+	typedef T                        value_type;
+
+	_List_const_iterator() noexcept : _M_iterator() {}
+
+	_List_const_iterator(_Base_ptr __p) noexcept : _M_iterator(__p) {}
+
+	_List_const_iterator(const _List_iterator<T>& __i) noexcept : _M_iterator(__i._M_iterator) {}
+ 
+	_Base_ptr get_base_ptr() const noexcept {return _M_iterator;}
+
+	pointer operator->() const {return static_cast<_Node_ptr>(_M_iterator)->ptr();}
+
+	reference operator*() const {return *static_cast<_Node_ptr>(_M_iterator)->ptr();}
+
+	const_iterator operator++() noexcept {
+		_M_iterator = _M_iterator->_M_next;
+		return *this;
+	}
+
+	const_iterator operator++(int) noexcept {
+		const_iterator __temp = _M_iterator;
+		_M_iterator = _M_iterator->_M_next;
+		return __temp;
+	}
+
+	const_iterator operator--() noexcept {
+		_M_iterator = _M_iterator->_M_prev;
+		return *this;
+	}
+
+	const_iterator operator--(int) noexcept {
+		const_iterator __temp = _M_iterator;
+		_M_iterator = _M_iterator->_M_prev;
+		return __temp;
+	}
+
+	friend bool operator==(const const_iterator& __l, const const_iterator& __r) noexcept {
+		return __l.get_base_ptr() == __r.get_base_ptr();
+	}
+
+	friend bool operator!=(const const_iterator& __l, const const_iterator& __r) noexcept {
+		return __l.get_base_ptr() != __r.get_base_ptr();
+	}
+};
+
+template<typename T, typename _Alloc>
+class _List_base {
 public:
-	list<T>() {}
-	list<T>(size_t size)
-	{
-		_size = size;
-		first = new Element<T>();
-		Element<T>* curr = first;
-		while (--size)
-		{
-			curr->getNext(new Element<T>());
-			curr = curr->getNext();
-		}
-		last = curr;
-	}
-	list<T>(size_t size, const T& data)
-	{
-		_size = size;
-		first = new Element<T>(data);
-		Element<T>* curr = first;
-		while (--size)
-		{
-			curr->setNext(new Element<T>(data));
-			curr = curr->getNext();
-		}
-		last = curr;
-	}
+	typedef _List_node_base         _Base_node;
+	typedef _List_node_base*        _Base_node_ptr;
+	typedef _List_node<T>           _Node;
+	typedef _List_node<T>*          _Node_ptr;
+	typedef std::size_t             size_type;
+	using iterator = typename _List_iterator<T>::iterator;
+	using const_iterator = typename _List_const_iterator<T>::const_iterator;
 
-	class iterator
-	{
-	private:
-		list<T> element;
-		Element<T>* curr;
-
-	public:
-		Element<T>* getCurr() { return curr; }
-
-		iterator() { curr = element.first; }
-
-		iterator(Element<T>* p) { curr = p; }
-
-		void operator++() { if (curr->getNext()) { curr = curr->getNext(); } }
-
-		iterator operator+(int number)
-		{
-			while (number && curr->getNext()) { number--; curr = curr->getNext(); }
-			if (number >= 1 && curr->getNext()) { curr = curr->getNext(); }
-			return iterator(curr);
-		}
-		iterator operator-(int number)
-		{
-			while (number && curr->getPrevious()) { number--; curr = curr->getPrevious(); }
-			if (number >= 1 && curr->getPrevious()) { curr = curr->getPrevious(); }
-			return iterator(curr);
-		}
-		void operator--() { if (curr->getPrevious()) { curr = curr->getPrevios(); } }
-
-		void operator=(iterator p) { curr = p.getCurr(); }
-
-		T& operator*() 
-		{
-			T data = T();
-			T& output = data;
-			if(curr) return curr->getData(); 
-			return output;
-		}
-
-		bool operator==(iterator p) { return curr == p.getCurr(); }
-
-		bool operator!=(iterator p) { return curr != p.getCurr(); }
+	struct _Node_header : _Base_node {
+		std::size_t __count = 0;
 	};
 
-	iterator begin() { return iterator(first); }
+	_Node_header _M_l;
+	size_type    _size;
+	_List_base() : _M_l{&_M_l, &_M_l}, _size() {}
+};
 
-	iterator end() { return iterator(last); }
+template<typename T, typename _Alloc = std::allocator<T>>
+class list : public _List_base<T, _Alloc> {
+public:
+	typedef _List_base<T, _Alloc>     list_base;
+	typedef list<T, _Alloc>           list_type;
 
-	void push_back(const T& data)
-	{
-		if (first)
-		{
-			Element<T>* curr = last;
-			curr->setNext(new Element<T>(data));
-			last = curr->getNext();
-			last->setPrevious(curr);
-		}
-		else
-		{
-			first = last = new Element<T>(data);
-		}
-		_size++;
-	}
-
-	void push_front(const T& data)
-	{
-		if (first)
-		{
-			Element<T>* curr = new Element<T>(data);
-			curr->setNext(first);
-			first = curr;
-			curr->getNext()->setPrevious(curr);
-		}
-		else
-		{
-			first = new Element<T>(data);
-			last = first;
-		}
-		_size++;
-	}
+	using _Base_node = typename list_base::_Base_node;
+	using _Base_node_ptr = typename list_base::_Base_node_ptr;
+	using _Node = typename list_base::_Node;
+	using _Node_ptr = typename list_base::_Node_ptr;
+	using size_type = typename list_base::size_type;
+	using iterator = typename list_base::iterator;
+	using const_iterator = typename list_base::const_iterator;
 
 
-	void pop_back()
-	{
-		if (!empty())
-		{
-			if (first == last) { first = last = nullptr; }
-			else
-			{
-				Element<T>* curr = last;
-				last = curr->getPrevious();
-				if (last) { last->setNext(nullptr); }
-				if (curr) { curr->setPrevious(nullptr); }
-				delete curr;
-				--_size;
-			}
+	typename _Alloc::template rebind<_Node>::other _allocator;
+    typedef typename _Alloc::template rebind<_Node>::other _alloc_type;
+    using _Alloc_traits = std::allocator_traits<_alloc_type>;
+
+	template<typename ... Args>
+	_Node_ptr create(Args&& ... _args) {
+		try {
+			_Node_ptr __node = _Alloc_traits::allocate(_allocator, 1);
+			_Alloc_traits::construct(_allocator, __node, std::forward<Args>(_args)...);
+			return __node;
+		} catch(...) {
+			throw ;
 		}
 	}
 
-	void pop_front()
-	{
-		if (first->getNext())
-		{
-			Element<T>* curr = first;
-			first = curr->getNext();
-			if (first) { first->setPrevious(nullptr); }
-			if (curr) { curr->setNext(nullptr); }
-			delete curr;
-			_size--;
+	void destroy_node(_Node_ptr __node) noexcept {
+		_Alloc_traits::destroy(_allocator, __node);
+		_Alloc_traits::deallocate(_allocator, __node, 1);
+	}
+
+	template<typename ... Args>
+	void emplace_back(Args&& ... _args) {
+		emplace(const_iterator(this->_M_l._M_prev), std::forward<Args>(_args)...);
+	}
+
+	template<typename ... Args>
+	void emplace_front(Args&& ... _args) {
+		emplace(const_iterator(&this->_M_l), std::forward<Args>(_args)...);
+	}
+ 
+	template<typename ... Args>
+	void emplace(const_iterator pos, Args&& ... _args) {
+		_Node_ptr __node = create(std::forward<Args>(_args)...);
+		_Base_node_ptr __before = const_cast<_Base_node_ptr>(pos.get_base_ptr());
+		++this->_size;
+		__node->_M_prev = __before;
+		_Base_node_ptr __temp = __before->_M_next;
+		__before->_M_next = __node;
+		__node->_M_next = __temp;
+		__temp->_M_prev = __node;
+	}
+
+	void push_back(const T& __x) {
+		emplace_back(__x);
+	}
+
+	void push_back(T&& __x) {
+		emplace_back(std::move(__x));
+	}
+
+	void push_front(const T& __x) {
+		emplace_front(__x);
+	}
+
+	void push_front(T&& __x) {
+		emplace_front(std::move(__x));
+	}
+
+	void insert(const_iterator pos, const T& __x) {
+		emplace(pos, __x);
+	}
+
+	void insert(const_iterator pos, T&& __x) {
+		emplace(pos, std::move(__x));
+	}
+
+	void erase(const_iterator pos) noexcept {
+		_Base_node_ptr __it = const_cast<_Base_node_ptr>(pos.get_base_ptr());
+		if(!__it || pos == cend()) {return;}
+		_Base_node_ptr __before = __it->_M_prev;
+		_Base_node_ptr __next = __it->_M_next;
+		if(__before) {__before->_M_next = __next;}
+		if(__next) {__next->_M_prev = __before;}
+		--this->_size;
+		destroy_node(static_cast<_Node_ptr>(__it));
+	}
+
+	void pop_front() {
+		erase(const_iterator(this->_M_l._M_next));
+	}
+
+	void pop_back() {
+		erase(const_iterator(this->_M_l._M_prev));
+	}
+
+	void clear() {
+		_Base_node_ptr __p = this->_M_l._M_next;
+		while(__p != &this->_M_l) {
+			_Node* __tmp = static_cast<_Node*>(__p);
+			__p = __tmp->_M_next;
+			--this->_size;;
+			destroy_node(__tmp);
 		}
-		else if (first)
-		{
-			first = last = nullptr;
+	}
+
+	size_type size() const noexcept {return this->_size;}
+
+public:
+	list() : list_base() {}
+
+	list(std::initializer_list<T> __l) : list_base() {
+		for(auto & i : __l) {
+			emplace_back(i);
 		}
 	}
 
-	void erase(list<T>::iterator pos)
-	{
-		Element<T>* curr = pos.getCurr();
-		if (curr->getPrevious() && curr->getNext())
-		{
-			curr->getPrevious()->setNext(curr->getNext());
-			curr->getNext()->setPrevious(curr->getPrevious());
+	list(const list_type& __l) : list_base() {
+		for(auto & i : __l) {
+			emplace_back(i);
 		}
-		else if (curr->getNext()) { curr->getNext()->setPrevious(nullptr); first = curr->getNext(); }
-		else if (curr->getPrevious()) { curr->getPrevious()->setNext(nullptr); last = curr->getPrevious(); }
-		curr->setNext(nullptr);
-		curr->setPrevious(nullptr);
-		delete curr;
-		_size--;
 	}
 
-	void insert(list<T>::iterator pos, const T& data)
-	{
-		Element<T>* curr = pos.getCurr();
-		Element<T>* new_elem = new Element<T>(data);
-		new_elem->setPrevious(curr->getPrevious());
-		new_elem->setNext(curr);
-		if (curr->getPrevious()) { curr->getPrevious()->setNext(new_elem); }
-		curr->setPrevious(new_elem);
-		if (first == curr) { first = new_elem; }
-		_size++;
+	list_type& operator=(const list_type& __l) {
+		clear();
+
+		auto i = __l.cbegin();
+		while(i != __l.cend()) {
+			emplace_back(*i);
+			++i;
+		}
+		return *this;
 	}
 
-	size_t size() { return _size; }
+	list_type& operator=(std::initializer_list<T> __l) {
+		clear();
 
-	bool empty()
-	{
-		if (first) return false;
-		return true;
+		for(auto & i : __l) {
+			emplace_back(i);
+		}
+		return *this;
 	}
+
+	iterator end() noexcept {return iterator(&this->_M_l);}
+
+	iterator begin() noexcept {return iterator(this->_M_l._M_next);}
+
+	const_iterator cend() const noexcept {return const_iterator(&this->_M_l);}
+
+	const_iterator cbegin() const noexcept {return const_iterator(this->_M_l._M_next);}
 };
