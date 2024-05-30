@@ -11,6 +11,11 @@ struct _List_node : _List_node_base {
 
 	_List_node(const T& __x) : _M_value(__x) {}
 
+	_List_node(T&& __x) : _M_value(std::move(__x)) {}
+
+	template<typename... Args>
+	_List_node(Args&&... _args) : _M_value(std::forward<Args>(_args)...) {}
+
 	T* ptr() {return std::addressof(_M_value);}
 
     const T* ptr() const {return std::addressof(_M_value);}
@@ -140,7 +145,11 @@ public:
 
 	_Node_header _M_l;
 	size_type    _size;
+
 	_List_base() : _M_l{&_M_l, &_M_l}, _size() {}
+
+	_List_base(const _Node_header& __n, size_type __s) 
+			: _M_l(__n), _size(__s) {}
 };
 
 template<typename T, typename _Alloc = std::allocator<T>>
@@ -156,6 +165,7 @@ public:
 	using size_type = typename list_base::size_type;
 	using iterator = typename list_base::iterator;
 	using const_iterator = typename list_base::const_iterator;
+	using _Node_header = typename list_base::_Node_header;
 
 
 	typename _Alloc::template rebind<_Node>::other _allocator;
@@ -173,6 +183,12 @@ public:
 		}
 	}
 
+	void set_size(size_type __s) {
+		this->_size = __s;
+	}
+
+	_Node_header& get_h() {return this->_M_l;}
+
 	void destroy_node(_Node_ptr __node) noexcept {
 		_Alloc_traits::destroy(_allocator, __node);
 		_Alloc_traits::deallocate(_allocator, __node, 1);
@@ -180,16 +196,16 @@ public:
 
 	template<typename ... Args>
 	void emplace_back(Args&& ... _args) {
-		emplace(const_iterator(this->_M_l._M_prev), std::forward<Args>(_args)...);
+		emplace(iterator(this->_M_l._M_prev), std::forward<Args>(_args)...);
 	}
 
 	template<typename ... Args>
 	void emplace_front(Args&& ... _args) {
-		emplace(const_iterator(&this->_M_l), std::forward<Args>(_args)...);
+		emplace(iterator(&this->_M_l), std::forward<Args>(_args)...);
 	}
  
 	template<typename ... Args>
-	void emplace(const_iterator pos, Args&& ... _args) {
+	void emplace(iterator pos, Args&& ... _args) {
 		_Node_ptr __node = create(std::forward<Args>(_args)...);
 		_Base_node_ptr __before = const_cast<_Base_node_ptr>(pos.get_base_ptr());
 		++this->_size;
@@ -216,15 +232,15 @@ public:
 		emplace_front(std::move(__x));
 	}
 
-	void insert(const_iterator pos, const T& __x) {
+	void insert(iterator pos, const T& __x) {
 		emplace(pos, __x);
 	}
 
-	void insert(const_iterator pos, T&& __x) {
+	void insert(iterator pos, T&& __x) {
 		emplace(pos, std::move(__x));
 	}
 
-	void erase(const_iterator pos) noexcept {
+	void erase(iterator pos) noexcept {
 		_Base_node_ptr __it = const_cast<_Base_node_ptr>(pos.get_base_ptr());
 		if(!__it || pos == cend()) {return;}
 		_Base_node_ptr __before = __it->_M_prev;
@@ -236,11 +252,11 @@ public:
 	}
 
 	void pop_front() {
-		erase(const_iterator(this->_M_l._M_next));
+		erase(iterator(this->_M_l._M_next));
 	}
 
 	void pop_back() {
-		erase(const_iterator(this->_M_l._M_prev));
+		erase(iterator(this->_M_l._M_prev));
 	}
 
 	void clear() {
@@ -248,7 +264,7 @@ public:
 		while(__p != &this->_M_l) {
 			_Node* __tmp = static_cast<_Node*>(__p);
 			__p = __tmp->_M_next;
-			--this->_size;;
+			--this->_size;
 			destroy_node(__tmp);
 		}
 	}
@@ -258,16 +274,24 @@ public:
 public:
 	list() : list_base() {}
 
-	list(std::initializer_list<T> __l) : list_base() {
+	list(std::initializer_list<T>& __l) : list_base() {
 		for(auto & i : __l) {
 			emplace_back(i);
 		}
 	}
 
 	list(const list_type& __l) : list_base() {
-		for(auto & i : __l) {
-			emplace_back(i);
+		auto i = __l.cbegin();
+		while(i != __l.cend()) {
+			emplace_back(*i);
+			++i;
 		}
+	}
+
+	list(list_type&& __l) : list_base(__l.get_h(), __l.size()) {
+		__l.get_h()._M_next = &__l.get_h();
+		__l.get_h()._M_prev = &__l.get_h();
+		__l.set_size(0);
 	}
 
 	list_type& operator=(const list_type& __l) {
@@ -281,13 +305,27 @@ public:
 		return *this;
 	}
 
-	list_type& operator=(std::initializer_list<T> __l) {
+	list_type& operator=(list_type&& __l) {
+		clear();
+
+		__l.get_h()._M_next = &__l.list_base::_M_l;
+		__l.get_h()._M_prev = &__l.list_base::_M_l;
+		this->_size = __l.size();
+		__l.set_size(0);
+		return *this;
+	}
+
+	list_type& operator=(std::initializer_list<T>& __l) {
 		clear();
 
 		for(auto & i : __l) {
 			emplace_back(i);
 		}
 		return *this;
+	}
+
+	~list() {
+		clear();
 	}
 
 	iterator end() noexcept {return iterator(&this->_M_l);}
