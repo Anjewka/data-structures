@@ -12,7 +12,7 @@ struct _Deque_iterator {
     typedef _Deque_iterator<T, const T&, const T*>  const_iterator;
     typedef T*                    _Type_ptr;
     typedef T**                   _Map_ptr;
-    using difference_type   = std::ptrdiff_t;
+    typedef _Deque_iterator<T, _Reference, _Pointer> this_class;
 
 public:
 
@@ -20,6 +20,8 @@ public:
     typedef _Reference       reference;
     typedef std::size_t      size_type;
     typedef T                value_type;
+    using difference_type = std::ptrdiff_t;
+    typedef std::random_access_iterator_tag	iterator_category;
 
     _Map_ptr node;
     _Type_ptr first;
@@ -35,7 +37,7 @@ public:
 	    last = first + difference_type(node_size(sizeof(T)));
     }
 
-    _Deque_iterator& operator++() {
+    this_class& operator++() {
         ++cur;
 
         if (cur == last) {
@@ -45,7 +47,7 @@ public:
         return *this;
     }
 
-    _Deque_iterator& operator--() {
+    this_class& operator--() {
         if (cur == first) {
             _M_set_node(node - 1);
             cur = last;
@@ -54,20 +56,24 @@ public:
         return *this;
     }
 
-    _Deque_iterator operator+=(size_type __n) {
-        if(__n <= last - cur) {
-            cur += __n;
-            return *this;
+    this_class& operator+=(difference_type __n) noexcept {
+	    const difference_type __offset = __n + (cur - first);
+        if (__offset >= 0 && __offset < difference_type(node_size(sizeof(T))))
+        cur += __n;
+        else
+        {
+            const difference_type __node_offset =
+            __offset > 0 ? __offset / difference_type(node_size(sizeof(T)))
+                : -difference_type((-__offset - 1)
+                            / node_size(sizeof(T))) - 1;
+            _M_set_node(node + __node_offset);
+            cur = first + (__offset - __node_offset
+                    * difference_type(node_size(sizeof(T))));
         }
-        __n -= last - cur; 
-        size_type number_node = __n / node_size(sizeof(T)) + 1;
-        _M_set_node(node + number_node);
-        cur = first + __n % node_size(sizeof(T));
-
         return *this;
-    }
+    } 
 
-    _Deque_iterator operator-=(size_type __n) {
+    this_class operator-=(size_type __n) {
         if(__n <= cur - first) {
             cur -= __n;
             return *this;
@@ -80,8 +86,8 @@ public:
         return *this;
     }
 
-    _Deque_iterator operator+(size_type __n) {
-        _Deque_iterator __temp = *this;
+    this_class operator+(size_type __n) {
+        this_class __temp = *this;
         __temp += __n;
         return __temp;
     }
@@ -90,22 +96,37 @@ public:
 
     pointer operator->() { return cur; }
 
-    friend bool operator==(const _Deque_iterator<T, _Reference, _Pointer> __l
-            , const _Deque_iterator<T, _Reference, _Pointer> __r) {
+    friend bool operator==(const this_class __l, const this_class __r) {
         return __l.cur == __r.cur; 
     }
 
-    friend bool operator!=(const _Deque_iterator<T, _Reference, _Pointer> __l
-            , const _Deque_iterator<T, _Reference, _Pointer> __r) {
+    friend bool operator!=(const this_class __l, const this_class __r) {
         return __l.cur != __r.cur; 
     }
 
-    friend iterator operator+(const _Deque_iterator<T, _Reference, _Pointer>& __r, difference_type __n) {
-        _Deque_iterator<T, _Reference, _Pointer> temp = __r;
+    friend this_class operator+(const this_class& __r, difference_type __n) {
+        this_class temp = __r;
         temp += __n;
         return temp;
     }
 
+    friend this_class operator-(const this_class& __r, difference_type __n) {
+        this_class temp = __r;
+        temp -= __n;
+        return temp;
+    }
+
+    friend difference_type operator-(const this_class& __x, const this_class& __y) noexcept {
+        return difference_type(node_size(sizeof(T)))
+        * (__x.node - __y.node - bool(__x.node))
+        + (__x.cur - __x.first)
+        + (__y.last - __y.cur);
+    }
+
+    friend bool operator<(const this_class& __x, const this_class& __y) noexcept {
+	    return (__x.node == __y.node)
+	      ? (__x.cur < __y.cur) : (__x.node < __y.node);
+    }
 };
 
 template<typename T, typename _Alloc>
@@ -220,7 +241,7 @@ public:
 
     template<typename... Args>
     void emplace_back(Args&&... _args) {
-        if(_M_impl._end.cur != _M_impl._end.last) {
+        if(_M_impl._end.cur != _M_impl._end.last - 1) {
             _Alloc_traits::construct(_allocator
                         , _M_impl._end.cur
                         , std::forward<Args>(_args)...);
@@ -376,6 +397,16 @@ public:
         _base::push_back(__x);
     }
 
+    template<typename... Args>
+    void emplace_back(Args&&... __args) {
+        _base::emplace_back(std::forward<Args>(__args)...);
+    }
+
+    template<typename... Args>
+    void emplace_front(Args&&... __args) {
+        _base::emplace_front(std::forward<Args>(__args)...);
+    }
+
     T& operator[](std::size_t __i) {
         return *(begin() + __i);
     }
@@ -384,6 +415,10 @@ public:
 
     void pop_back() {
         _base::pop_back();
+    }
+
+    void pop_front() {
+        _base::pop_front();
     }
 
     iterator begin() {return this->_M_impl.beg;}
