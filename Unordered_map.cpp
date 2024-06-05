@@ -172,12 +172,12 @@ public:
     _node_ptr _M_single_bucket = nullptr;
     __equal __eq;
 
-private:
     _buckets_ptr _M_buckets = &_M_single_bucket;
     size_type _M_bucket_count = 1;
     _node_base _M_before_begin;
     size_type element_count = 0;
 
+private:
     _hash_code _M_hash_code(const _Key& __k) const {
         return _M_hash()(__k);
     }
@@ -208,44 +208,6 @@ private:
             }
             _M_buckets[__x] = static_cast<_node_ptr>(&_M_before_begin);
         }
-    }
-
-    void rehash(size_type __count) {
-        _buckets_ptr __copy_buckets = _buckets_alloc_traits::allocate(__buckets_alloc, __count);
-        for(std::size_t i = 0; i<__count; ++i) {
-            _buckets_alloc_traits::construct(__buckets_alloc, __copy_buckets + i, nullptr);
-        }
-        for(size_t i = 0; i<__count ; ++i) {__copy_buckets[i] = nullptr;}
-        _node_ptr __p = _M_begin();
-        _M_before_begin._M_nxt = nullptr;
-        size_type __bbegin_bkt = 0;
-
-        while (__p) {
-            _node_ptr __next = __p->_M_next();
-            size_type __bkt = _M_bucket_index(_M_hash_code(__p->_M_storage.first), __count);
-            __p->_M_hash = __bkt;
-            if (!__copy_buckets[__bkt]) {
-                __p->_M_nxt = _M_before_begin._M_nxt;
-                _M_before_begin._M_nxt = __p;
-                __copy_buckets[__bkt] = static_cast<_node_ptr>(&_M_before_begin);
-                __copy_buckets[__bbegin_bkt] = __p;
-                __bbegin_bkt = __bkt;
-            }
-            else {
-                __p->_M_nxt = __copy_buckets[__bkt]->_M_nxt;
-                __copy_buckets[__bkt]->_M_nxt = __p;
-            }
-            __p = __next;
-        }
-
-        for(size_t i = 0; i<_M_bucket_count ; ++i) {
-            _buckets_alloc_traits::destroy(__buckets_alloc,_M_buckets + i);
-        }
-        if(element_count > 1) {
-            _buckets_alloc_traits::deallocate(__buckets_alloc, _M_buckets,_M_bucket_count);
-        } 
-        _M_bucket_count = __count;
-        _M_buckets = __copy_buckets;
     }
 
     iterator _M_insert_unique_node(size_type __bkt, size_type __code, _node_ptr __node, size_type __ic = 1) {
@@ -305,11 +267,43 @@ public:
     _Hashtable() = default;
 
     _Hashtable(std::initializer_list<pair_type> _list) {
-        rehash(_list.size());
-
         for(auto & i : _list) {
             emplace(std::make_pair(i.first, i.second));
         }
+    }
+
+    _Hashtable(const _Hashtable& __h) {
+        _M_buckets = _buckets_alloc_traits::allocate(__buckets_alloc, __h._M_bucket_count);
+        for(std::size_t i = 0; i<__h._M_bucket_count; ++i) {
+            _buckets_alloc_traits::construct(__buckets_alloc, _M_buckets + i, nullptr);
+            _M_buckets[i] = nullptr;
+        }
+
+        _node_ptr __p = __h._M_begin();
+        _M_before_begin._M_nxt = nullptr;
+        size_type __bbegin_bkt = 0;
+
+        while (__p) {
+            _node_ptr __next = __p->_M_next();
+            size_type __bkt = _M_bucket_index(_M_hash_code(__p->_M_storage.first), __h._M_bucket_count);
+            __p->_M_hash = __bkt;
+            if (!_M_buckets[__bkt]) {
+                __p->_M_nxt = _M_before_begin._M_nxt;
+                _M_before_begin._M_nxt = __p;
+                _M_buckets[__bkt] = static_cast<_node_ptr>(&_M_before_begin);
+                _M_buckets[__bbegin_bkt] = __p;
+                __bbegin_bkt = __bkt;
+            }
+            else {
+                __p->_M_nxt = _M_buckets[__bkt]->_M_nxt;
+                _M_buckets[__bkt]->_M_nxt = __p;
+            }
+            __p = __next;
+        }
+    }
+
+    ~_Hashtable() {
+        clear();
     }
 
 public:
@@ -362,6 +356,44 @@ public:
         return cend();
     }
 
+    void rehash(size_type __count) {
+        _buckets_ptr __copy_buckets = _buckets_alloc_traits::allocate(__buckets_alloc, __count);
+        for(std::size_t i = 0; i<__count; ++i) {
+            _buckets_alloc_traits::construct(__buckets_alloc, __copy_buckets + i, nullptr);
+        }
+        for(size_t i = 0; i<__count ; ++i) {__copy_buckets[i] = nullptr;}
+        _node_ptr __p = _M_begin();
+        _M_before_begin._M_nxt = nullptr;
+        size_type __bbegin_bkt = 0;
+
+        while (__p) {
+            _node_ptr __next = __p->_M_next();
+            size_type __bkt = _M_bucket_index(_M_hash_code(__p->_M_storage.first), __count);
+            __p->_M_hash = __bkt;
+            if (!__copy_buckets[__bkt]) {
+                __p->_M_nxt = _M_before_begin._M_nxt;
+                _M_before_begin._M_nxt = __p;
+                __copy_buckets[__bkt] = static_cast<_node_ptr>(&_M_before_begin);
+                __copy_buckets[__bbegin_bkt] = __p;
+                __bbegin_bkt = __bkt;
+            }
+            else {
+                __p->_M_nxt = __copy_buckets[__bkt]->_M_nxt;
+                __copy_buckets[__bkt]->_M_nxt = __p;
+            }
+            __p = __next;
+        }
+
+        for(size_t i = 0; i<_M_bucket_count ; ++i) {
+            _buckets_alloc_traits::destroy(__buckets_alloc,_M_buckets + i);
+        }
+        if(element_count > 1) {
+            _buckets_alloc_traits::deallocate(__buckets_alloc, _M_buckets,_M_bucket_count);
+        }
+        _M_bucket_count = __count;
+        _M_buckets = __copy_buckets;
+    }
+
     _Value& at(const _Key& __k) {
         iterator __f = find(__k);
         if(__f == end()) {throw std::out_of_range ("method \"at\"");;}
@@ -387,13 +419,23 @@ public:
                 __node->_M_nxt = temp->_M_nxt;
                 if(temp->_M_nxt) {
                     _M_buckets[temp->_M_next()->_M_hash] = __node;
+                } else if(_M_buckets[__bkt] == temp) {
+                    _M_buckets[__bkt] = nullptr;
                 }
-                temp->_M_nxt = nullptr;
+
                 if(temp) {
                     _node_alloc_traits::destroy(__node_alloc, temp);
                     _node_alloc_traits::deallocate(__node_alloc, temp, 1);
                 }
                 --element_count;
+
+                if(!element_count) {
+                    _buckets_alloc_traits::deallocate(__buckets_alloc, _M_buckets,_M_bucket_count);
+                    _M_single_bucket = nullptr;
+                    _M_buckets = &_M_single_bucket;
+                    _M_bucket_count = 1;
+                    _M_before_begin;
+                }
                 return;
             }
             temp = temp->_M_next();
@@ -414,25 +456,40 @@ public:
         while(temp && temp->_M_hash == __bkt) {
             if(temp->_M_storage.first == __k) {
                 __node->_M_nxt = temp->_M_nxt;
+
                 if(temp->_M_nxt) {
                     _M_buckets[temp->_M_next()->_M_hash] = __node;
+                } else if(_M_buckets[__bkt] == temp) {
+                    _M_buckets[__bkt] = nullptr;
                 }
-                temp->_M_nxt = nullptr;
+
                 if(temp) {
                     _node_alloc_traits::destroy(__node_alloc, temp);
                     _node_alloc_traits::deallocate(__node_alloc, temp, 1);
                 }
                 --element_count;
-                return iterator(__node);
+
+                if(!element_count) {
+                    _buckets_alloc_traits::deallocate(__buckets_alloc, _M_buckets,_M_bucket_count);
+                    _M_single_bucket = nullptr;
+                    _M_buckets = &_M_single_bucket;
+                    _M_bucket_count = 1;
+                    _M_before_begin;
+                    return end();
+                }
+                if(__node) {return __node->_M_next();}
+                return end();
             }
             temp = temp->_M_next();
             __node = __node->_M_next();
         }
+
         return end();
     }
 
     void clear() noexcept {
         if(!_M_before_begin._M_nxt) {return;}
+
         _node_ptr __p = _M_begin();
 
         while(__p) {
@@ -440,8 +497,10 @@ public:
 
             _node_alloc_traits::destroy(__node_alloc, __p);
             _node_alloc_traits::deallocate(__node_alloc, __p, 1);
-            __p = temp;            
+            __p = temp;
         }
+
+        _buckets_alloc_traits::deallocate(__buckets_alloc, _M_buckets,_M_bucket_count);
         element_count = 0;
         _M_before_begin._M_nxt = nullptr;
         _M_single_bucket = nullptr;
@@ -459,14 +518,6 @@ public:
     const_iterator cbegin() const noexcept {return const_iterator(_M_begin());}
 
     const_iterator cend() const noexcept {return const_iterator(nullptr);}
-
-    void print() noexcept {
-        _node_ptr p = _M_begin();
-        while(p) {
-            std::cout << p->_M_hash << " " << p->_M_storage.second << "\n";
-            p = p->_M_next();
-        }
-    }
 };
 
 template<typename _Key,
@@ -488,6 +539,10 @@ public:
     unordered_map() = default;
 
     unordered_map(std::initializer_list<pair_type> _list) : _M_h(_list) {}
+
+    unordered_map(const unordered_map& __m) = default;
+
+    unordered_map(unordered_map&& __m) : _M_h(std::move(__m)) {}
 
     std::pair<bool, iterator> insert(const _Key __k, const _Value __v) {return _M_h.insert(__k, __v);}
 
@@ -534,6 +589,4 @@ public:
     const_iterator cbegin() const noexcept {return _M_h.cbegin();}
 
     const_iterator cend() const noexcept {return _M_h.cend();}
-
-    void print() noexcept {_M_h.print();}
 };
