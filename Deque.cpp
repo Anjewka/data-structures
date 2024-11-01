@@ -190,7 +190,7 @@ public:
         _Deque_impl(_T_alloc_type&& __a) noexcept : _T_alloc_type(std::move(__a)) {}
 
         _Deque_impl(_Deque_data&& __d, _T_alloc_type&& __a) noexcept
-            : _Deque_data(std::move(__d)), _T_alloc_type(std::move(__a)) {}
+                : _Deque_data(std::move(__d)), _T_alloc_type(std::move(__a)) {}
     };
 
     _Deque_impl _M_impl;
@@ -394,12 +394,12 @@ public:
     }
 
     Deque_base(Deque_base&& __d, const allocator_type& __a)
-        : _M_impl(std::move(__d._M_impl), _Tp_alloc_type(__a)) {
+            : _M_impl(std::move(__d._M_impl), _Tp_alloc_type(__a)) {
         __d._M_initialize_map(0);
     }
 
     Deque_base(Deque_base&& __d, const allocator_type& __a, size_type __n)
-        : _M_impl(std::move(__d._M_impl), _Tp_alloc_type(__a)) {
+            : _M_impl(std::move(__d._M_impl), _Tp_alloc_type(__a)) {
         if (__a == __d.get_allocator()) {
             if (__d._M_impl._M_map) {
                 _M_initialize_map(0);
@@ -415,27 +415,78 @@ public:
 template<typename T, typename _Alloc = std::allocator<T>>
 class deque : public Deque_base<T, _Alloc> {
 public:
-    typedef Deque_base<T, _Alloc> _base;
+    using _base = Deque_base<T, _Alloc>;
 
     using _base::_ptr;
     using _base::_const_ptr;
 
-    typedef typename _base::size_type size_type;
-    typedef typename _base::iterator  iterator;
-    typedef typename _base::iterator  const_iterator;
+    typedef typename _base::size_type   size_type;
+    typedef typename _base::iterator    iterator;
+    typedef typename _base::iterator    const_iterator;
+    using value_type = T;
+
+private:
+    template<typename _ForwardIterator>
+    _ForwardIterator fill_initialize(_ForwardIterator first, size_type count
+                , const value_type& __x, _Alloc& __a) {
+        typedef std::allocator_traits<_Alloc> __traits;
+        auto __cur = first;
+        try {
+            for(; count > 0; --count) {
+                __traits::construct(__a, std::__addressof(*__cur), __x);
+                ++__cur;
+            }
+            return __cur;
+        } catch(...) {
+            for(auto __p = this->_M_impl.beg; __p != __cur; ++__p) {
+                __traits::destroy(__a, std::__addressof(*__p));
+            }
+            throw;
+        }
+    }
+
+    template<typename _ForwardIterator>
+    void initialize_range(_ForwardIterator __b, _ForwardIterator __l, _Alloc& __a) {
+        size_type __size = __l - __b;
+        this->_M_initialize_map(__size);
+
+        typedef std::allocator_traits<_Alloc> __traits;
+        iterator __i = begin();
+        _ForwardIterator __forward_iterator = __b;
+
+        try {
+            for(; __forward_iterator != __l; ++__i, ++__forward_iterator) {
+                __traits::construct(__a, std::__addressof(*(__i))
+                        , *__forward_iterator);
+            }
+        } catch(...) {
+            for(iterator __p = begin(); __p != __i; ++__p) {
+                __traits::destroy(__a, std::__addressof(*(__p)));
+            }
+            throw;
+        }        
+    }
+
+public:
+    using allocator_type = _Alloc;
 
     deque() = default;
 
     deque(const allocator_type& __a) : _base(__a) {}
 
-    deque(size_type __n, const allocator_type& __a = allocator_type()) : _base(__a, __s) {}
+    deque(size_type __n, const allocator_type& __a = allocator_type()) : _base(__a, __n) {}
 
     deque(size_type __n, const value_type& __v, const allocator_type& __a = allocator_type())
-        : _base(__a, __s) {
-
+            : _base(__a, __n) {
+        fill_initialize(begin(), __n, __v, this->_M_get_Tp_allocator());
     }
 
     deque(deque&& __d) : _base(std::move(__d)) {}
+
+    deque(std::initializer_list<value_type> __l, const allocator_type& __a = allocator_type())
+            : _base(__a) {
+        initialize_range(__l.begin(), __l.end(), this->_M_get_Tp_allocator());
+    }
 
     deque(const deque& __d) = default;
 
