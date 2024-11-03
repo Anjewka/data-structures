@@ -356,7 +356,9 @@ public:
     }
 
     void pop_back() noexcept {
-        if (_M_impl._end.cur == _M_impl._end.first) {
+        if(_M_impl._end == _M_impl.beg) { return; }
+
+        if(_M_impl._end.cur == _M_impl._end.first) {
             _Alloc_traits::deallocate(_M_impl, _M_impl._end.first, node_size(sizeof(T)));
             _Alloc_traits::destroy(_M_impl, _M_impl._end.cur);
             _M_impl._end._M_set_node(_M_impl._end.node - 1);
@@ -370,6 +372,8 @@ public:
     }
 
     void pop_front() noexcept {
+        if(_M_impl._end == _M_impl.beg) { return; }
+
         if (_M_impl.beg.cur == _M_impl.beg.last) {
             _Alloc_traits::deallocate(_M_impl, _M_impl.beg.first, node_size(sizeof(T)));
             _Alloc_traits::destroy(_M_impl, _M_impl.beg.cur);
@@ -524,6 +528,20 @@ public:
 
     void pop_front() {
         _base::pop_front();
+    }
+
+    void clear() noexcept {
+        while(!empty()) {
+            pop_back();
+        }
+    }
+
+    bool empty() const noexcept {
+        return this->_M_impl.beg == this->_M_impl._end;
+    }
+
+    ~deque() noexcept {
+        clear();
     }
 
     iterator begin() { return this->_M_impl.beg; }
