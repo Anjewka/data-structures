@@ -553,11 +553,15 @@ public:
         return this->_M_impl._end - this->_M_impl.beg;
     }
  
-    iterator begin() { return this->_M_impl.beg; }
+    iterator begin() noexcept { return this->_M_impl.beg; }
+
+    const_iterator begin() const noexcept { return this->_M_impl.beg; }
  
-    iterator end() { return this->_M_impl._end; }
+    iterator end() noexcept { return this->_M_impl._end; }
+
+    const_iterator end() const noexcept { return this->_M_impl._end; }
  
-    const_iterator cbegin() { return this->_M_impl.beg; }
+    const_iterator cbegin() const noexcept { return this->_M_impl.beg; }
  
-    const_iterator cend() { return this->_M_impl._end; }
+    const_iterator cend() const noexcept { return this->_M_impl._end; }
 };
