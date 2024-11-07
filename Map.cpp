@@ -499,10 +499,6 @@ public:
         return allocator_type(_M_get_Node_allocator());
     }
  
-    struct _Avl_tree_node_header : _Avl_tree_node_base {
-        std::size_t h;    
-    };
- 
     struct _Avl_tree_impl : public _Node_alloc, public _Key_comparator<_Comp>, public _Avl_tree_header {
         using key_compare = _Key_comparator<_Comp>;
  
