@@ -513,7 +513,11 @@ public:
 
     iterator begin() noexcept {return iterator(_M_begin());}
 
+    const_iterator begin() const noexcept {return const_iterator(_M_begin());}
+
     iterator end() noexcept {return iterator(nullptr);}
+
+    const_iterator end() const noexcept {return const_iterator(nullptr);}
 
     const_iterator cbegin() const noexcept {return const_iterator(_M_begin());}
 
@@ -584,7 +588,11 @@ public:
 
     iterator begin() noexcept {return _M_h.begin();}
 
+    const_iterator begin() const noexcept {return _M_h.begin();}
+
     iterator end() noexcept {return _M_h.end();}
+
+    const_iterator end() const noexcept {return _M_h.end();}
 
     const_iterator cbegin() const noexcept {return _M_h.cbegin();}
 
